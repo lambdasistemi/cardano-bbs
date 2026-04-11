@@ -1,0 +1,43 @@
+cabal-version: 3.0
+name:          cardano-bbs
+version:       0.1.0.0
+synopsis:      BBS+ anonymous credentials for Cardano
+license:       Apache-2.0
+build-type:    Simple
+
+library
+  hs-source-dirs:  src
+  default-language: Haskell2010
+  ghc-options:     -Wall
+  exposed-modules:
+    Cardano.BBS.KeyGen
+    Cardano.BBS.Credential
+    Cardano.BBS.Proof
+    Cardano.BBS.Verify
+    Cardano.BBS.Serialize
+    Cardano.BBS.FFI
+    Cardano.BLS.Sign
+    Cardano.BLS.Aggregate
+  build-depends:
+    , base       >= 4.14 && < 5
+    , bytestring >= 0.11
+    , serialise  >= 0.2
+    , aeson      >= 2.0
+
+test-suite unit-tests
+  type:            exitcode-stdio-1.0
+  hs-source-dirs:  test
+  main-is:         Main.hs
+  default-language: Haskell2010
+  ghc-options:     -Wall -threaded
+  other-modules:
+    Unit.CredentialSpec
+    Conformance.SignatureSpec
+  build-depends:
+    , base
+    , cardano-bbs
+    , bytestring
+    , hspec       >= 2.0
+    , aeson
+    , directory
+    , filepath
