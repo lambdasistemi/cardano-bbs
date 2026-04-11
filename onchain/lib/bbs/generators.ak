@@ -18,6 +18,12 @@ const sha256_output_bytes = 32
 
 const expand_len = 48
 
+pub fn p_1() -> G1Element {
+  G1Element {
+    bytes: #"a8ce256102840821a3e94ea9025e4662b205762f9776b3a766c872b948f1fd225e7c59698588e70d11406d161b4e28c9",
+  }
+}
+
 pub fn q_1() -> G1Element {
   expect_some(list.at(create_generators(1), 0))
 }

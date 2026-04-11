@@ -1,5 +1,9 @@
 use aiken/collection/list
+use aiken/crypto/bls12_381/g1
+use aiken/crypto/bls12_381/scalar
 use aiken/primitive/bytearray
+use bbs/generators
+use bbs/transcript
 use bbs/types.{BBSProof, G1Element, G2Element, RegulatorRegistry}
 
 const compressed_g1_bytes = 48
@@ -28,6 +32,7 @@ pub fn verify(
     valid_disclosure_shape(registry, proof),
     valid_disclosure_indices(registry, proof),
     valid_disclosed_values(proof),
+    valid_challenge(registry, proof),
   }
 }
 
@@ -40,7 +45,9 @@ fn valid_point(bytes: ByteArray) -> Bool {
 }
 
 fn valid_scalar(bytes: ByteArray) -> Bool {
-  bytearray.length(bytes) == scalar_bytes
+  bytearray.length(bytes) == scalar_bytes && scalar.to_bytes(
+    scalar.from_bytes(bytes),
+  ) == bytes
 }
 
 fn valid_nonce(proof: BBSProof, context_nonce: ByteArray) -> Bool {
@@ -85,58 +92,261 @@ fn valid_disclosed_values(proof: BBSProof) -> Bool {
   list.all(proof.disclosed_values, fn(value) { !bytearray.is_empty(value) })
 }
 
+fn valid_challenge(registry: RegulatorRegistry, proof: BBSProof) -> Bool {
+  let total_attributes = list.length(registry.credential_schema)
+  let disclosed_scalars = list.map(
+    proof.disclosed_values,
+    transcript.map_message_to_scalar_as_hash,
+  )
+  let domain = transcript.calculate_domain(
+    registry.regulator_pk,
+    #"",
+    total_attributes,
+  )
+  let hidden_indices = remaining_indices(
+    total_attributes,
+    proof.disclosed_indices,
+    0,
+  )
+  let t_1 = compute_t_1(proof)
+  let t_2 = compute_t_2(proof, disclosed_scalars, domain, hidden_indices)
+
+  transcript.calculate_challenge(
+    proof.disclosed_indices,
+    disclosed_scalars,
+    proof.a_bar,
+    proof.b_bar,
+    proof.d,
+    t_1,
+    t_2,
+    domain,
+    proof.nonce,
+  ) == proof.c
+}
+
+fn compute_t_1(proof: BBSProof) -> G1Element {
+  add_points(
+    add_points(
+      scale_point(proof.b_bar, proof.c),
+      scale_point(proof.a_bar, proof.e_hat),
+    ),
+    scale_point(proof.d, proof.r1_hat),
+  )
+}
+
+fn compute_t_2(
+  proof: BBSProof,
+  disclosed_scalars: List<ByteArray>,
+  domain: ByteArray,
+  hidden_indices: List<Int>,
+) -> G1Element {
+  let b_v = compute_b_v(proof.disclosed_indices, disclosed_scalars, domain)
+  let initial = add_points(
+    scale_point(b_v, proof.c),
+    scale_point(proof.d, proof.r3_hat),
+  )
+
+  add_hidden_terms(hidden_indices, proof.m_hat, initial)
+}
+
+fn compute_b_v(
+  disclosed_indices: List<Int>,
+  disclosed_scalars: List<ByteArray>,
+  domain: ByteArray,
+) -> G1Element {
+  let initial = add_points(
+    generators.p_1(),
+    scale_point(generators.q_1(), domain),
+  )
+
+  add_disclosed_terms(disclosed_indices, disclosed_scalars, initial)
+}
+
+fn add_disclosed_terms(
+  disclosed_indices: List<Int>,
+  disclosed_scalars: List<ByteArray>,
+  acc: G1Element,
+) -> G1Element {
+  when disclosed_indices is {
+    [] -> acc
+    [index, ..rest_indexes] ->
+      when disclosed_scalars is {
+        [] -> acc
+        [message, ..rest_messages] ->
+          add_disclosed_terms(
+            rest_indexes,
+            rest_messages,
+            add_points(acc, scale_point(expect_generator(index), message)),
+          )
+      }
+  }
+}
+
+fn add_hidden_terms(
+  hidden_indices: List<Int>,
+  hidden_scalars: List<ByteArray>,
+  acc: G1Element,
+) -> G1Element {
+  when hidden_indices is {
+    [] -> acc
+    [index, ..rest_indexes] ->
+      when hidden_scalars is {
+        [] -> acc
+        [value, ..rest_values] ->
+          add_hidden_terms(
+            rest_indexes,
+            rest_values,
+            add_points(acc, scale_point(expect_generator(index), value)),
+          )
+      }
+  }
+}
+
+fn remaining_indices(
+  total_attributes: Int,
+  disclosed_indices: List<Int>,
+  current: Int,
+) -> List<Int> {
+  if current >= total_attributes {
+    []
+  } else {
+    if contains_index(disclosed_indices, current) {
+      remaining_indices(total_attributes, disclosed_indices, current + 1)
+    } else {
+      [
+        current,
+        ..remaining_indices(total_attributes, disclosed_indices, current + 1)
+      ]
+    }
+  }
+}
+
+fn contains_index(indices: List<Int>, target: Int) -> Bool {
+  when indices is {
+    [] -> False
+    [index, ..rest] -> index == target || contains_index(rest, target)
+  }
+}
+
+fn expect_generator(index: Int) -> G1Element {
+  when generators.message_generator(index) is {
+    Some(point) -> point
+    None -> G1Element { bytes: #"" }
+  }
+}
+
+fn add_points(left: G1Element, right: G1Element) -> G1Element {
+  G1Element {
+    bytes: g1.compress(
+      g1.add(g1.decompress(left.bytes), g1.decompress(right.bytes)),
+    ),
+  }
+}
+
+fn scale_point(point: G1Element, factor: ByteArray) -> G1Element {
+  G1Element {
+    bytes: g1.compress(
+      g1.scale(g1.decompress(point.bytes), scalar.from_bytes(factor)),
+    ),
+  }
+}
+
 test verify_accepts_structurally_valid_proof() {
   let registry = RegulatorRegistry {
-    regulator_pk: G2Element { bytes: #"11" },
+    regulator_pk: G2Element {
+      bytes: #"a820f230f6ae38503b86c70dc50b61c58a77e45c39ab25c0652bbaa8fa136f2851bd4781c9dcde39fc9d1d52c9e60268061e7d7632171d91aa8d460acee0e96f1e7c4cfb12d3ff9ab5d5dc91c277db75c845d649ef3c4f63aebc364cd55ded0c",
+    },
     credential_schema: [
-      #"6a7572697364696374696f6e", #"726f6c65", #"737461747573",
+      #"6d30", #"6d31", #"6d32", #"6d33", #"6d34", #"6d35", #"6d36", #"6d37",
+      #"6d38", #"6d39",
     ],
   }
 
   let proof = BBSProof {
-    a_bar: G1Element { bytes: #"01" },
-    b_bar: G1Element { bytes: #"02" },
-    d: G1Element { bytes: #"03" },
-    e_hat: #"10",
-    r1_hat: #"11",
-    r3_hat: #"12",
-    m_hat: [#"13"],
-    c: #"14",
-    disclosed_indices: [0, 2],
-    disclosed_values: [#"4555", #"616374697665"],
-    nonce: #"aa",
+    a_bar: G1Element {
+      bytes: #"81925c2e525d9fbb0ba95b438b5a13fff5874c7c0515c193628d7d143ddc3bb487771ad73658895997a88dd5b254ed29",
+    },
+    b_bar: G1Element {
+      bytes: #"abc019bfca62c09b8dafb37e5f09b1d380e084ec3623d071ec38d6b8602af93aa0ddbada307c9309cca86be16db53dc7",
+    },
+    d: G1Element {
+      bytes: #"ac310574f509c712bb1a181d64ea3c1ee075c018a2bc773e2480b5c033ccb9bfea5af347a88ab83746c9342ba76db367",
+    },
+    e_hat: #"5ff70ce9006d166fd813a81b448a632216521c864594f3f92965974914992f8d",
+    r1_hat: #"1845230915b11680cf44b25886c5670904ac2d88255c8c31aea7b072e9c4eb7e",
+    r3_hat: #"4c3fdd38836ae9d2e9fa271c8d9fd42f669a9938aeeba9d8ae613bf11f489ce9",
+    m_hat: [
+      #"47616f5cbaee95511dfaa5c73d85e4ddd2f29340f821dc2fb40db3eae5f5bc08",
+      #"467eb195e38d7d436b63e556ea653168282a23b53d5792a107f85b1203f82aab",
+      #"46f6940650760e5b320261ffc0ca5f15917b51e7d2ad4bcbec94de792e229db6",
+      #"63abff23af392a5e73ce115c27e8492ec24a0815091c69874dbd9dae2d2eed00",
+      #"0810c748a798a78a804a39034c6e745cee455812cc982eea7105948b2cb55b82",
+      #"278a77237fcbec4748e2d2255af0994dd09dba8ac60515a39b24632a2c1c840c",
+    ],
+    c: #"4a70506add5b2eb0be9ff66e3ea8deae666f198edfbb1391c6834e6df4f1026d",
+    disclosed_indices: [0, 2, 4, 6],
+    disclosed_values: [
+      #"9872ad089e452c7b6e283dfac2a80d58e8d0ff71cc4d5e310a1debdda4a45f02",
+      #"7372e9daa5ed31e6cd5c825eac1b855e84476a1d94932aa348e07b73",
+      #"496694774c5604ab1b2544eababcf0f53278ff50", #"d183ddc6e2665aa4e2f088af",
+    ],
+    nonce: #"bed231d880675ed101ead304512e043ade9958dd0241ea70b4b3957fba941501",
   }
 
-  verify(normalize_registry(registry), normalize_proof(proof), #"aa")
+  verify(
+    registry,
+    proof,
+    #"bed231d880675ed101ead304512e043ade9958dd0241ea70b4b3957fba941501",
+  )
 }
 
 test verify_rejects_nonce_mismatch() {
-  let registry = normalize_registry(
-    RegulatorRegistry {
-      regulator_pk: G2Element { bytes: #"11" },
-      credential_schema: [
-        #"6a7572697364696374696f6e", #"726f6c65", #"737461747573",
-      ],
+  let registry = RegulatorRegistry {
+    regulator_pk: G2Element {
+      bytes: #"a820f230f6ae38503b86c70dc50b61c58a77e45c39ab25c0652bbaa8fa136f2851bd4781c9dcde39fc9d1d52c9e60268061e7d7632171d91aa8d460acee0e96f1e7c4cfb12d3ff9ab5d5dc91c277db75c845d649ef3c4f63aebc364cd55ded0c",
     },
-  )
+    credential_schema: [
+      #"6d30", #"6d31", #"6d32", #"6d33", #"6d34", #"6d35", #"6d36", #"6d37",
+      #"6d38", #"6d39",
+    ],
+  }
 
-  let proof = normalize_proof(
-    BBSProof {
-      a_bar: G1Element { bytes: #"01" },
-      b_bar: G1Element { bytes: #"02" },
-      d: G1Element { bytes: #"03" },
-      e_hat: #"10",
-      r1_hat: #"11",
-      r3_hat: #"12",
-      m_hat: [#"13"],
-      c: #"14",
-      disclosed_indices: [0, 2],
-      disclosed_values: [#"4555", #"616374697665"],
-      nonce: #"aa",
+  let proof = BBSProof {
+    a_bar: G1Element {
+      bytes: #"81925c2e525d9fbb0ba95b438b5a13fff5874c7c0515c193628d7d143ddc3bb487771ad73658895997a88dd5b254ed29",
     },
-  )
+    b_bar: G1Element {
+      bytes: #"abc019bfca62c09b8dafb37e5f09b1d380e084ec3623d071ec38d6b8602af93aa0ddbada307c9309cca86be16db53dc7",
+    },
+    d: G1Element {
+      bytes: #"ac310574f509c712bb1a181d64ea3c1ee075c018a2bc773e2480b5c033ccb9bfea5af347a88ab83746c9342ba76db367",
+    },
+    e_hat: #"5ff70ce9006d166fd813a81b448a632216521c864594f3f92965974914992f8d",
+    r1_hat: #"1845230915b11680cf44b25886c5670904ac2d88255c8c31aea7b072e9c4eb7e",
+    r3_hat: #"4c3fdd38836ae9d2e9fa271c8d9fd42f669a9938aeeba9d8ae613bf11f489ce9",
+    m_hat: [
+      #"47616f5cbaee95511dfaa5c73d85e4ddd2f29340f821dc2fb40db3eae5f5bc08",
+      #"467eb195e38d7d436b63e556ea653168282a23b53d5792a107f85b1203f82aab",
+      #"46f6940650760e5b320261ffc0ca5f15917b51e7d2ad4bcbec94de792e229db6",
+      #"63abff23af392a5e73ce115c27e8492ec24a0815091c69874dbd9dae2d2eed00",
+      #"0810c748a798a78a804a39034c6e745cee455812cc982eea7105948b2cb55b82",
+      #"278a77237fcbec4748e2d2255af0994dd09dba8ac60515a39b24632a2c1c840c",
+    ],
+    c: #"4a70506add5b2eb0be9ff66e3ea8deae666f198edfbb1391c6834e6df4f1026d",
+    disclosed_indices: [0, 2, 4, 6],
+    disclosed_values: [
+      #"9872ad089e452c7b6e283dfac2a80d58e8d0ff71cc4d5e310a1debdda4a45f02",
+      #"7372e9daa5ed31e6cd5c825eac1b855e84476a1d94932aa348e07b73",
+      #"496694774c5604ab1b2544eababcf0f53278ff50", #"d183ddc6e2665aa4e2f088af",
+    ],
+    nonce: #"bed231d880675ed101ead304512e043ade9958dd0241ea70b4b3957fba941501",
+  }
 
-  !verify(registry, proof, #"bb")
+  !verify(
+    registry,
+    proof,
+    #"001122d880675ed101ead304512e043ade9958dd0241ea70b4b3957fba941501",
+  )
 }
 
 test verify_rejects_unsorted_disclosure_indices() {
@@ -166,6 +376,55 @@ test verify_rejects_unsorted_disclosure_indices() {
   )
 
   !verify(registry, proof, #"aa")
+}
+
+test verify_rejects_challenge_mismatch() {
+  let registry = RegulatorRegistry {
+    regulator_pk: G2Element {
+      bytes: #"a820f230f6ae38503b86c70dc50b61c58a77e45c39ab25c0652bbaa8fa136f2851bd4781c9dcde39fc9d1d52c9e60268061e7d7632171d91aa8d460acee0e96f1e7c4cfb12d3ff9ab5d5dc91c277db75c845d649ef3c4f63aebc364cd55ded0c",
+    },
+    credential_schema: [
+      #"6d30", #"6d31", #"6d32", #"6d33", #"6d34", #"6d35", #"6d36", #"6d37",
+      #"6d38", #"6d39",
+    ],
+  }
+
+  let proof = BBSProof {
+    a_bar: G1Element {
+      bytes: #"81925c2e525d9fbb0ba95b438b5a13fff5874c7c0515c193628d7d143ddc3bb487771ad73658895997a88dd5b254ed29",
+    },
+    b_bar: G1Element {
+      bytes: #"abc019bfca62c09b8dafb37e5f09b1d380e084ec3623d071ec38d6b8602af93aa0ddbada307c9309cca86be16db53dc7",
+    },
+    d: G1Element {
+      bytes: #"ac310574f509c712bb1a181d64ea3c1ee075c018a2bc773e2480b5c033ccb9bfea5af347a88ab83746c9342ba76db367",
+    },
+    e_hat: #"5ff70ce9006d166fd813a81b448a632216521c864594f3f92965974914992f8d",
+    r1_hat: #"1845230915b11680cf44b25886c5670904ac2d88255c8c31aea7b072e9c4eb7e",
+    r3_hat: #"4c3fdd38836ae9d2e9fa271c8d9fd42f669a9938aeeba9d8ae613bf11f489ce9",
+    m_hat: [
+      #"47616f5cbaee95511dfaa5c73d85e4ddd2f29340f821dc2fb40db3eae5f5bc08",
+      #"467eb195e38d7d436b63e556ea653168282a23b53d5792a107f85b1203f82aab",
+      #"46f6940650760e5b320261ffc0ca5f15917b51e7d2ad4bcbec94de792e229db6",
+      #"63abff23af392a5e73ce115c27e8492ec24a0815091c69874dbd9dae2d2eed00",
+      #"0810c748a798a78a804a39034c6e745cee455812cc982eea7105948b2cb55b82",
+      #"278a77237fcbec4748e2d2255af0994dd09dba8ac60515a39b24632a2c1c840c",
+    ],
+    c: #"4b70506add5b2eb0be9ff66e3ea8deae666f198edfbb1391c6834e6df4f1026d",
+    disclosed_indices: [0, 2, 4, 6],
+    disclosed_values: [
+      #"9872ad089e452c7b6e283dfac2a80d58e8d0ff71cc4d5e310a1debdda4a45f02",
+      #"7372e9daa5ed31e6cd5c825eac1b855e84476a1d94932aa348e07b73",
+      #"496694774c5604ab1b2544eababcf0f53278ff50", #"d183ddc6e2665aa4e2f088af",
+    ],
+    nonce: #"bed231d880675ed101ead304512e043ade9958dd0241ea70b4b3957fba941501",
+  }
+
+  !verify(
+    registry,
+    proof,
+    #"bed231d880675ed101ead304512e043ade9958dd0241ea70b4b3957fba941501",
+  )
 }
 
 pub fn normalize_registry(registry: RegulatorRegistry) -> RegulatorRegistry {
