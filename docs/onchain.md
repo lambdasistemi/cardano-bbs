@@ -37,9 +37,9 @@ The off-chain library can already generate valid BBS+ signatures and proofs, and
 
 Measured verifier costs are now documented in [budget-report.md](/code/cardano-bbs-verify/specs/001-bbs-credentials/budget-report.md).
 
-- 1 attribute: `3.52B` CPU
-- 5 attributes: `7.16B` CPU
-- 10 attributes: `14.18B` CPU
+- 1 attribute: `2.96B` CPU
+- 5 attributes: `6.15B` CPU
+- 10 attributes: `12.60B` CPU
 
 The important result is that 10 attributes currently exceed the 10B CPU transaction budget, so the verifier is not yet within the intended upper-bound target.
 
