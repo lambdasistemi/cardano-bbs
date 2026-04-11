@@ -10,7 +10,7 @@ Implement BBS+ anonymous credentials for Cardano: a Haskell off-chain library fo
 ## Technical Context
 
 **Language/Version**: Haskell (GHC 9.6+) for off-chain, Aiken (latest) for on-chain, Rust (via FFI) for BBS+ core
-**Primary Dependencies**: `zkryptium` v0.6.1 (Rust, BBS+ draft-10), Aiken stdlib BLS12-381 modules, `cardano-api` for transaction construction
+**Primary Dependencies**: `zkryptium` v0.6.1 (Rust, BBS+ draft-10), Aiken stdlib BLS12-381 modules, future Cardano integration via `cardano-node-clients` only
 **Storage**: N/A — library, no persistent storage
 **Testing**: HSpec + QuickCheck (Haskell), Aiken test framework, conformance against IETF test vectors
 **Target Platform**: Linux x86_64 (off-chain), Cardano mainnet/testnet (on-chain)
@@ -18,6 +18,12 @@ Implement BBS+ anonymous credentials for Cardano: a Haskell off-chain library fo
 **Performance Goals**: Proof derivation <1s, on-chain verification within Plutus V3 budget (~2-3B CPU ExUnits for 5 attributes)
 **Constraints**: 10B CPU tx budget, ~14KB tx size limit, BLS12-381 curve only
 **Scale/Scope**: Credentials with 1-10 attributes
+
+### Cardano Integration Policy
+
+- `cardano-api` is forbidden for this feature.
+- When Cardano client integration is needed, it must use `cardano-node-clients`.
+- Transaction-building work is blocked until tx-builder support lands in `cardano-node-clients`.
 
 ## Constitution Check
 
