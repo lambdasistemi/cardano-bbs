@@ -1,9 +1,12 @@
 module Main where
 
+import qualified Conformance.ProofSpec
+import qualified Conformance.SignatureSpec
 import Test.Hspec
+import qualified Unit.CredentialSpec
 
 main :: IO ()
 main = hspec $ do
-  describe "cardano-bbs" $ do
-    it "placeholder" $ do
-      True `shouldBe` True
+  Unit.CredentialSpec.spec
+  Conformance.SignatureSpec.spec
+  Conformance.ProofSpec.spec

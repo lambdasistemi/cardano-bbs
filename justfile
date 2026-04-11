@@ -3,7 +3,8 @@ build: build-offchain build-onchain
 
 # Build off-chain Haskell library
 build-offchain:
-    cd offchain && cabal build all
+    cd offchain/cbits/zkryptium-ffi && cargo build --release
+    cd offchain && LD_LIBRARY_PATH="$PWD/cbits/zkryptium-ffi/target/release${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}" cabal build all --extra-lib-dirs="$PWD/cbits/zkryptium-ffi/target/release"
 
 # Build on-chain Aiken validators
 build-onchain:
@@ -14,7 +15,8 @@ test: test-offchain test-onchain
 
 # Run off-chain tests
 test-offchain:
-    cd offchain && cabal test all
+    cd offchain/cbits/zkryptium-ffi && cargo build --release
+    cd offchain && LD_LIBRARY_PATH="$PWD/cbits/zkryptium-ffi/target/release${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}" cabal test all --extra-lib-dirs="$PWD/cbits/zkryptium-ffi/target/release"
 
 # Run on-chain tests
 test-onchain:
