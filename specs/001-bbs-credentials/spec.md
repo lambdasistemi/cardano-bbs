@@ -86,12 +86,30 @@ The regulator revokes a previously issued credential. After revocation, proofs d
 
 ---
 
+### User Story 6 - BLS Signature Aggregation for Multi-Oracle (Priority: P2)
+
+Multiple independent oracles each sign the same message (e.g., a Merkle root update). Their BLS signatures are aggregated into one. An on-chain validator verifies the aggregate signature in a single pairing check — proving that a quorum of registered oracles approved the update, regardless of how many signed.
+
+**Why this priority**: This reuses the same on-chain BLS12-381 pairing verification built for BBS+. The off-chain part (signature aggregation) is simpler — just point addition. The value is structural: leaderless, non-interactive multi-oracle consensus without coordination rounds.
+
+**Independent Test**: Can be tested by having 3 oracles sign the same message, aggregating their signatures, and verifying the aggregate against the sum of their public keys in one pairing check.
+
+**Acceptance Scenarios**:
+
+1. **Given** 3 oracles each signing the same message with their BLS key, **When** the signatures are aggregated, **Then** the aggregate verifies against the combined public key in a single pairing check.
+2. **Given** an aggregate signature from 2 of 3 oracles, **When** verified against a quorum policy requiring 2-of-3, **Then** verification succeeds.
+3. **Given** an aggregate signature, **When** one component signature is forged, **Then** verification fails.
+4. **Given** N oracles (N = 1 to 10), **When** their signatures are aggregated and verified on-chain, **Then** verification cost is constant regardless of N.
+
+---
+
 ### Edge Cases
 
 - What happens when a credential contains zero attributes? — Proof should still verify (empty disclosure set).
 - What happens when all attributes are disclosed? — Degenerates to a standard signature verification; unlinkability is lost (by design, since everything is revealed).
 - What happens when the on-chain proof verification exceeds script budgets? — The transaction fails. The system must report budget usage clearly so credential size (number of attributes) can be tuned.
 - What happens when a proof is replayed in a different transaction? — The validator must include transaction-specific context (e.g., a nonce or datum hash) in the verification to prevent replay.
+- What happens when oracles sign different messages? — Signatures over different messages cannot be aggregated meaningfully; the aggregate verification fails. The system must not silently accept mismatched aggregates.
 
 ## Requirements *(mandatory)*
 
@@ -108,6 +126,10 @@ The regulator revokes a previously issued credential. After revocation, proofs d
 - **FR-009**: The system MUST support selective disclosure — revealing any subset of credential attributes while hiding the rest.
 - **FR-010**: The system MUST prevent proof replay — each proof MUST be bound to a specific transaction context.
 - **FR-011**: The system MUST conform to the BBS+ signature scheme as specified in draft-irtf-cfrg-bbs-signatures, using the BLS12-381 curve.
+- **FR-012**: The system MUST allow an oracle to generate a BLS key pair and sign a message.
+- **FR-013**: The system MUST allow anyone to aggregate multiple BLS signatures over the same message into a single aggregate signature.
+- **FR-014**: The system MUST provide an on-chain validator that verifies an aggregate BLS signature against a set of registered public keys in a single pairing check.
+- **FR-015**: On-chain aggregate signature verification cost MUST be constant regardless of the number of signers.
 
 ### Key Entities
 
@@ -116,6 +138,8 @@ The regulator revokes a previously issued credential. After revocation, proofs d
 - **Proof**: A zero-knowledge derivation from a credential. Contains disclosed attributes, a proof-of-knowledge for hidden attributes, and a nonce binding it to a specific context. Submitted as a redeemer.
 - **Attribute**: A single claim within a credential (e.g., "jurisdiction: EU"). Represented as a scalar field element.
 - **Revocation Accumulator**: A cryptographic accumulator tracking revoked credentials. Published on-chain. Proofs of non-membership are included in the ZK proof.
+- **Oracle Key Pair**: A BLS12-381 key pair for signing messages. The verification key is registered on-chain. The signing key is held by the oracle.
+- **Aggregate Signature**: The sum of multiple BLS signatures over the same message. Verifiable against the sum of the corresponding public keys.
 
 ## Success Criteria *(mandatory)*
 
@@ -127,6 +151,7 @@ The regulator revokes a previously issued credential. After revocation, proofs d
 - **SC-004**: All operations pass conformance tests against BBS+ specification test vectors (draft-irtf-cfrg-bbs-signatures).
 - **SC-005**: A round-trip test (off-chain issuance → off-chain proof derivation → on-chain verification) succeeds end-to-end on a Cardano testnet.
 - **SC-006**: The system handles credentials with 1 to 10 attributes without exceeding on-chain budget limits.
+- **SC-007**: Aggregate BLS signature verification for 3-of-5 oracles completes within Plutus V3 budget limits with the same cost as verifying a single signature.
 
 ## Assumptions
 
