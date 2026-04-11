@@ -33,6 +33,16 @@ What does not exist yet:
 
 The off-chain library can already generate valid BBS+ signatures and proofs, and it can now serialize them into the Aiken-facing redeemer/datum layout. This slice adds a real rejection gate on-chain instead of unconditional acceptance, recomputes the transcript challenge for the current no-header proof layout, and checks the core pairing equation. The repo still cannot claim end-to-end Cardano support because signed-header support, budget measurement, and a full Cardano round-trip are still missing.
 
+## Current Budget Signal
+
+Measured verifier costs are now documented in [budget-report.md](/code/cardano-bbs-verify/specs/001-bbs-credentials/budget-report.md).
+
+- 1 attribute: `3.52B` CPU
+- 5 attributes: `7.16B` CPU
+- 10 attributes: `14.18B` CPU
+
+The important result is that 10 attributes currently exceed the 10B CPU transaction budget, so the verifier is not yet within the intended upper-bound target.
+
 ## Next On-Chain Work
 
 The next serious on-chain tasks are:

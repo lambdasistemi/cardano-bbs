@@ -53,3 +53,13 @@ test-suite unit-tests
     , containers
     , directory
     , filepath
+
+executable budget-cases
+  hs-source-dirs:  app
+  main-is:         BudgetCases.hs
+  default-language: Haskell2010
+  ghc-options:     -Wall
+  build-depends:
+    , base
+    , cardano-bbs
+    , bytestring
