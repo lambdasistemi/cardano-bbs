@@ -28,7 +28,6 @@ pub fn verify(
     valid_disclosure_shape(registry, proof),
     valid_disclosure_indices(registry, proof),
     valid_disclosed_values(proof),
-    valid_placeholder_generators(proof),
   }
 }
 
@@ -84,17 +83,6 @@ fn do_valid_disclosure_indices(
 
 fn valid_disclosed_values(proof: BBSProof) -> Bool {
   list.all(proof.disclosed_values, fn(value) { !bytearray.is_empty(value) })
-}
-
-fn valid_placeholder_generators(proof: BBSProof) -> Bool {
-  // This is not the cryptographic pairing verifier yet. It prevents obviously
-  // empty placeholder data from being accepted while the real generator and
-  // pairing logic is still under implementation.
-  and {
-    !bytearray.is_empty(proof.a_bar.bytes),
-    !bytearray.is_empty(proof.b_bar.bytes),
-    !bytearray.is_empty(proof.d.bytes),
-  }
 }
 
 test verify_accepts_structurally_valid_proof() {

@@ -11,6 +11,7 @@ What exists today:
 - compilable validator entrypoints
 - a generated `plutus.json` blueprint
 - an off-chain serializer that emits Plutus `Data` CBOR matching the current `BBSProof` and `RegulatorRegistry` shapes
+- deterministic SHA-256 ciphersuite generator derivation for `Q_1` and message generators, matching the current IETF BBS draft vectors
 - structural BBS proof validation on-chain:
   - regulator/public proof byte-size checks
   - disclosure-count and disclosure-index validation
@@ -31,7 +32,7 @@ The off-chain library can already generate valid BBS+ signatures and proofs, and
 
 The next serious on-chain tasks are:
 
-1. implement generator point derivation
+1. use the derived generators inside the real proof verification equation
 2. implement the core proof verification equation
 3. reconstruct the disclosed-message contribution to the challenge
 4. measure execution cost for different attribute counts
