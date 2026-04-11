@@ -27,6 +27,7 @@
             cargo
             rustc
             rustfmt
+            just
 
             # Aiken
           ] ++ pkgs.lib.optionals (aikenPkg != null) [ aikenPkg ]
