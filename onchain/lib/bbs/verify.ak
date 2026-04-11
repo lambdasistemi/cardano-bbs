@@ -1,5 +1,7 @@
 use aiken/collection/list
 use aiken/crypto/bls12_381/g1
+use aiken/crypto/bls12_381/g2
+use aiken/crypto/bls12_381/pairing
 use aiken/crypto/bls12_381/scalar
 use aiken/primitive/bytearray
 use bbs/generators
@@ -33,6 +35,7 @@ pub fn verify(
     valid_disclosure_indices(registry, proof),
     valid_disclosed_values(proof),
     valid_challenge(registry, proof),
+    valid_pairing(registry, proof),
   }
 }
 
@@ -122,6 +125,16 @@ fn valid_challenge(registry: RegulatorRegistry, proof: BBSProof) -> Bool {
     domain,
     proof.nonce,
   ) == proof.c
+}
+
+fn valid_pairing(registry: RegulatorRegistry, proof: BBSProof) -> Bool {
+  pairing.final_exponentiation(
+    pairing.miller_loop(
+      g1.decompress(proof.a_bar.bytes),
+      g2.decompress(registry.regulator_pk.bytes),
+    ),
+    pairing.miller_loop(g1.decompress(proof.b_bar.bytes), g2.generator),
+  )
 }
 
 fn compute_t_1(proof: BBSProof) -> G1Element {
