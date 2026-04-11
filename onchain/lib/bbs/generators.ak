@@ -76,7 +76,7 @@ fn derive_generators(
   }
 }
 
-fn expand_message_xmd(
+pub fn expand_message_xmd(
   msg: ByteArray,
   dst: ByteArray,
   len_in_bytes: Int,
