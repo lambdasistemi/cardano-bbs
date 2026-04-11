@@ -2,3 +2,4 @@ dist-newstyle/
 result
 .llm/
 build/
+offchain/cbits/zkryptium-ffi/target/

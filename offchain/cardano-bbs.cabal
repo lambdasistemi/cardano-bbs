@@ -23,6 +23,10 @@ library
     , bytestring >= 0.11
     , serialise  >= 0.2
     , aeson      >= 2.0
+    , binary     >= 0.8
+    , text       >= 1.2
+  extra-libraries:
+    zkryptium_ffi
 
 test-suite unit-tests
   type:            exitcode-stdio-1.0
@@ -33,11 +37,14 @@ test-suite unit-tests
   other-modules:
     Unit.CredentialSpec
     Conformance.SignatureSpec
+    Conformance.ProofSpec
   build-depends:
     , base
     , cardano-bbs
     , bytestring
+    , base16-bytestring >= 1.0
     , hspec       >= 2.0
     , aeson
+    , binary
     , directory
     , filepath
