@@ -22,9 +22,11 @@ library
     , base       >= 4.14 && < 5
     , bytestring >= 0.11
     , serialise  >= 0.2
+    , cborg      >= 0.2
     , aeson      >= 2.0
     , binary     >= 0.8
     , text       >= 1.2
+    , containers >= 0.6
   extra-libraries:
     zkryptium_ffi
 
@@ -36,15 +38,18 @@ test-suite unit-tests
   ghc-options:     -Wall -threaded
   other-modules:
     Unit.CredentialSpec
+    Unit.SerializeSpec
     Conformance.SignatureSpec
     Conformance.ProofSpec
   build-depends:
     , base
     , cardano-bbs
     , bytestring
+    , cborg
     , base16-bytestring >= 1.0
     , hspec       >= 2.0
     , aeson
     , binary
+    , containers
     , directory
     , filepath

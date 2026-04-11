@@ -8,6 +8,7 @@ The public off-chain modules are:
 - `Cardano.BBS.Credential`
 - `Cardano.BBS.Proof`
 - `Cardano.BBS.Verify`
+- `Cardano.BBS.Serialize`
 
 ## Data Model
 
@@ -24,7 +25,7 @@ newtype Attribute = Attribute ByteString
 type DisclosureSet = [Int]
 ```
 
-That design is intentional for the current phase. It keeps the public API small while the serialization contract is still evolving.
+That design is intentional for the current phase. It keeps the cryptographic boundary narrow while higher-level integration types are derived explicitly at the serialization layer.
 
 ## Implemented Functions
 
@@ -82,8 +83,44 @@ verifyProof
   -> IO Bool
 ```
 
+### On-Chain Serialization
+
+```haskell
+proofRedeemerData
+  :: Proof
+  -> PresentationHeader
+  -> [Attribute]
+  -> DisclosureSet
+  -> Either String BBSProofDatum
+
+proofRedeemerToCBOR
+  :: Proof
+  -> PresentationHeader
+  -> [Attribute]
+  -> DisclosureSet
+  -> Either String ByteString
+
+publicKeyToCBOR :: PublicKey -> ByteString
+
+regulatorRegistryToCBOR
+  :: PublicKey
+  -> [ByteString]
+  -> ByteString
+```
+
+`proofRedeemerToCBOR` parses the opaque `zkryptium` proof bytes into the field layout expected by the Aiken `BBSProof` redeemer:
+
+- three compressed G1 points: `a_bar`, `b_bar`, `d`
+- scalar responses: `e_hat`, `r1_hat`, `r3_hat`, `c`
+- one `m_hat` scalar per undisclosed attribute
+- disclosed indices and disclosed values
+- the presentation header reused as the on-chain nonce
+
+The module also exposes a minimal Plutus `Data` encoder/decoder so the off-chain contract can be tested without needing the full Plutus ledger API in this package.
+
 ## Caveats
 
 - `verifyCredential` and `verifyProof` currently return `False` on cryptographic failure rather than surfacing a rich error type.
-- The on-chain serialization contract is not finalized yet, so `Credential` and `Proof` are not yet exposed as CBOR records tailored to Aiken.
-- The API is usable for off-chain testing today, but it is not yet the final integration API.
+- The serializer currently targets the `BBSProof` and `RegulatorRegistry` data shapes only. The validator logic that consumes them is still stub-level.
+- `proofRedeemerToCBOR` requires the original attribute list and disclosure set because the raw proof bytes alone do not contain disclosed values or message-count context.
+- The API is usable for off-chain testing and redeemer construction today, but it is not yet the final end-to-end integration API.
