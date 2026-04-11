@@ -10,6 +10,7 @@ What exists today:
 - compilable BBS and BLS type definitions
 - compilable validator entrypoints
 - a generated `plutus.json` blueprint
+- an off-chain serializer that emits Plutus `Data` CBOR matching the current `BBSProof` and `RegulatorRegistry` shapes
 
 What does not exist yet:
 
@@ -21,7 +22,7 @@ What does not exist yet:
 
 ## Why This Matters
 
-The off-chain library can already generate valid BBS+ signatures and proofs, but the repo cannot yet claim end-to-end Cardano support. The current on-chain modules are placeholders that keep the structure stable while the off-chain foundation matures.
+The off-chain library can already generate valid BBS+ signatures and proofs, and it can now serialize them into the Aiken-facing redeemer/datum layout. That removes the contract-shape ambiguity, but the repo still cannot claim end-to-end Cardano support because the validator logic itself is not implemented.
 
 ## Next On-Chain Work
 
@@ -29,7 +30,7 @@ The next serious on-chain tasks are:
 
 1. implement generator point derivation
 2. implement the core proof verification equation
-3. bind the proof nonce to transaction context
+3. replace the current placeholder nonce check with real transaction-context binding
 4. add Aiken unit tests
 5. measure execution cost for different attribute counts
 
