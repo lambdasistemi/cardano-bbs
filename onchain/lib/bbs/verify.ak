@@ -138,12 +138,14 @@ fn valid_pairing(registry: RegulatorRegistry, proof: BBSProof) -> Bool {
 }
 
 fn compute_t_1(proof: BBSProof) -> G1Element {
-  add_points(
-    add_points(
-      scale_point(proof.b_bar, proof.c),
-      scale_point(proof.a_bar, proof.e_hat),
+  compress_point(
+    add_native_points(
+      add_native_points(
+        scale_native_point(decompress_point(proof.b_bar), proof.c),
+        scale_native_point(decompress_point(proof.a_bar), proof.e_hat),
+      ),
+      scale_native_point(decompress_point(proof.d), proof.r1_hat),
     ),
-    scale_point(proof.d, proof.r1_hat),
   )
 }
 
@@ -154,22 +156,22 @@ fn compute_t_2(
   hidden_indices: List<Int>,
 ) -> G1Element {
   let b_v = compute_b_v(proof.disclosed_indices, disclosed_scalars, domain)
-  let initial = add_points(
-    scale_point(b_v, proof.c),
-    scale_point(proof.d, proof.r3_hat),
+  let initial = add_native_points(
+    scale_native_point(b_v, proof.c),
+    scale_native_point(decompress_point(proof.d), proof.r3_hat),
   )
 
-  add_hidden_terms(hidden_indices, proof.m_hat, initial)
+  compress_point(add_hidden_terms(hidden_indices, proof.m_hat, initial))
 }
 
 fn compute_b_v(
   disclosed_indices: List<Int>,
   disclosed_scalars: List<ByteArray>,
   domain: ByteArray,
-) -> G1Element {
-  let initial = add_points(
-    generators.p_1(),
-    scale_point(generators.q_1(), domain),
+) {
+  let initial = add_native_points(
+    decompress_point(generators.p_1()),
+    scale_native_point(decompress_point(generators.q_1()), domain),
   )
 
   add_disclosed_terms(disclosed_indices, disclosed_scalars, initial)
@@ -178,8 +180,8 @@ fn compute_b_v(
 fn add_disclosed_terms(
   disclosed_indices: List<Int>,
   disclosed_scalars: List<ByteArray>,
-  acc: G1Element,
-) -> G1Element {
+  acc,
+) {
   when disclosed_indices is {
     [] -> acc
     [index, ..rest_indexes] ->
@@ -189,7 +191,13 @@ fn add_disclosed_terms(
           add_disclosed_terms(
             rest_indexes,
             rest_messages,
-            add_points(acc, scale_point(expect_generator(index), message)),
+            add_native_points(
+              acc,
+              scale_native_point(
+                decompress_point(expect_generator(index)),
+                message,
+              ),
+            ),
           )
       }
   }
@@ -198,8 +206,8 @@ fn add_disclosed_terms(
 fn add_hidden_terms(
   hidden_indices: List<Int>,
   hidden_scalars: List<ByteArray>,
-  acc: G1Element,
-) -> G1Element {
+  acc,
+) {
   when hidden_indices is {
     [] -> acc
     [index, ..rest_indexes] ->
@@ -209,7 +217,13 @@ fn add_hidden_terms(
           add_hidden_terms(
             rest_indexes,
             rest_values,
-            add_points(acc, scale_point(expect_generator(index), value)),
+            add_native_points(
+              acc,
+              scale_native_point(
+                decompress_point(expect_generator(index)),
+                value,
+              ),
+            ),
           )
       }
   }
@@ -248,20 +262,20 @@ fn expect_generator(index: Int) -> G1Element {
   }
 }
 
-fn add_points(left: G1Element, right: G1Element) -> G1Element {
-  G1Element {
-    bytes: g1.compress(
-      g1.add(g1.decompress(left.bytes), g1.decompress(right.bytes)),
-    ),
-  }
+fn decompress_point(point: G1Element) {
+  g1.decompress(point.bytes)
 }
 
-fn scale_point(point: G1Element, factor: ByteArray) -> G1Element {
-  G1Element {
-    bytes: g1.compress(
-      g1.scale(g1.decompress(point.bytes), scalar.from_bytes(factor)),
-    ),
-  }
+fn compress_point(point) -> G1Element {
+  G1Element { bytes: g1.compress(point) }
+}
+
+fn add_native_points(left, right) {
+  g1.add(left, right)
+}
+
+fn scale_native_point(point, factor: ByteArray) {
+  g1.scale(point, scalar.from_bytes(factor))
 }
 
 test verify_accepts_structurally_valid_proof() {

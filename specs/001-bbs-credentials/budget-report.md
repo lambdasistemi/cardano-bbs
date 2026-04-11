@@ -20,15 +20,19 @@ Current verifier assumptions:
 
 | Attributes | Disclosed | Memory ExUnits | CPU ExUnits | Status vs 10B CPU budget |
 | --- | ---: | ---: | ---: | --- |
-| 1 | 1 | 2,192,593 | 3,524,919,934 | Pass |
-| 5 | 2 | 7,108,242 | 7,164,664,334 | Pass |
-| 10 | 4 | 17,391,788 | 14,175,952,361 | Fail |
+| 1 | 1 | 2,170,013 | 2,960,660,254 | Pass |
+| 5 | 2 | 7,066,478 | 6,148,817,710 | Pass |
+| 10 | 4 | 17,326,044 | 12,595,622,057 | Fail |
 
 ## Interpretation
 
 - The current verifier is acceptable for small and medium credentials.
 - The current verifier exceeds the 10B CPU transaction budget at 10 attributes.
 - This means FR-007 and SC-006 are not currently satisfied.
+- Compared to the previous measured version, CPU improved by roughly:
+  - 16.0% at 1 attribute
+  - 14.2% at 5 attributes
+  - 11.1% at 10 attributes
 
 ## Likely Cost Drivers
 
