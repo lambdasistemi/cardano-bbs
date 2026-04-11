@@ -16,5 +16,5 @@ jobs:
     runs-on: nixos
     steps:
       - uses: actions/checkout@v4
-      - name: Stub CI
-        run: echo "CI stub — will be replaced by real CI"
+      - name: Run Scaffold Verification
+        run: nix develop --quiet -c just ci
