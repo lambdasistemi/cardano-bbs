@@ -1,0 +1,245 @@
+{
+  "preamble": {
+    "title": "lambdasistemi/cardano-bbs",
+    "description": "BBS+ proof verification and BLS aggregate signature verification for Cardano",
+    "version": "0.1.0",
+    "plutusVersion": "v3",
+    "compiler": {
+      "name": "Aiken",
+      "version": "v1.1.21+168452c"
+    },
+    "license": "Apache-2.0"
+  },
+  "validators": [
+    {
+      "title": "bbs_credential.bbs_credential.spend",
+      "datum": {
+        "title": "datum",
+        "schema": {
+          "$ref": "#/definitions/bbs~1types~1RegulatorRegistry"
+        }
+      },
+      "redeemer": {
+        "title": "redeemer",
+        "schema": {
+          "$ref": "#/definitions/bbs~1types~1BBSProof"
+        }
+      },
+      "compiledCode": "59019101010029800aba2aba1aab9faab9eaab9dab9a48888896600264653001300700198039804000cc01c0092225980099b8748008c01cdd500144cc8a60026018005300c300d002912cc004c00cc02cdd500144c8c96600260220050038b201e375c601e00260186ea800a2c80524464660020020064466006002600400491112cc004c014c034dd5004c4c8c8c8c8c8c8c8c8c8c8ca60026eb8c06c0066036015301b0099bae301b0089bae301b0079bae301b0069bac301b0059bae301b0049bac301b0039bac301b0024888888888966002604c0171330173025015133017009133017008133016004225980080144cc060010896600200513301a00522598008014566002604060506ea807a264944c0acc0a4dd500f45902744c8c008c0b400cdd718158012054899180118158019bad302900240a113230023029003375c604e00481322c81206036002603400260320026030002602e002602c002602a002602800260260026024002601c6ea80262c806060106ea8008dc3a400114a08030600e00260066ea801e29344d95900101",
+      "hash": "74d34edaecf2c6acf27dce7519738d0aa14e414b15a728dc3f9e8284"
+    },
+    {
+      "title": "bbs_credential.bbs_credential.else",
+      "redeemer": {
+        "schema": {}
+      },
+      "compiledCode": "59019101010029800aba2aba1aab9faab9eaab9dab9a48888896600264653001300700198039804000cc01c0092225980099b8748008c01cdd500144cc8a60026018005300c300d002912cc004c00cc02cdd500144c8c96600260220050038b201e375c601e00260186ea800a2c80524464660020020064466006002600400491112cc004c014c034dd5004c4c8c8c8c8c8c8c8c8c8c8ca60026eb8c06c0066036015301b0099bae301b0089bae301b0079bae301b0069bac301b0059bae301b0049bac301b0039bac301b0024888888888966002604c0171330173025015133017009133017008133016004225980080144cc060010896600200513301a00522598008014566002604060506ea807a264944c0acc0a4dd500f45902744c8c008c0b400cdd718158012054899180118158019bad302900240a113230023029003375c604e00481322c81206036002603400260320026030002602e002602c002602a002602800260260026024002601c6ea80262c806060106ea8008dc3a400114a08030600e00260066ea801e29344d95900101",
+      "hash": "74d34edaecf2c6acf27dce7519738d0aa14e414b15a728dc3f9e8284"
+    },
+    {
+      "title": "bls_oracle.bls_oracle.spend",
+      "datum": {
+        "title": "datum",
+        "schema": {
+          "$ref": "#/definitions/bls~1types~1OracleRegistry"
+        }
+      },
+      "redeemer": {
+        "title": "redeemer",
+        "schema": {
+          "$ref": "#/definitions/bls~1types~1AggregateSignatureRedeemer"
+        }
+      },
+      "compiledCode": "58f201010029800aba2aba1aab9faab9eaab9dab9a48888896600264653001300700198039804000cc01c0092225980099b8748008c01cdd500144ca60026016003300b300c0019b874800122259800980098059baa0078991919912cc004c04c006264b30013006301037540031323259800980b00144c8cc004004dd6180b002912cc0040062b3001300a301437540171324a2602e602a6ea802e2c809a2646600600660320046eb4c05c0050164590141bae30140013011375400316403c60240091640446eb8c040004c044004c040004c030dd5003c5900a0c020dd50014528200c180380098019baa0078a4d1365640041",
+      "hash": "7346b0f551083273412b082319f108077cd982b40d5ae90c1a00cfb8"
+    },
+    {
+      "title": "bls_oracle.bls_oracle.else",
+      "redeemer": {
+        "schema": {}
+      },
+      "compiledCode": "58f201010029800aba2aba1aab9faab9eaab9dab9a48888896600264653001300700198039804000cc01c0092225980099b8748008c01cdd500144ca60026016003300b300c0019b874800122259800980098059baa0078991919912cc004c04c006264b30013006301037540031323259800980b00144c8cc004004dd6180b002912cc0040062b3001300a301437540171324a2602e602a6ea802e2c809a2646600600660320046eb4c05c0050164590141bae30140013011375400316403c60240091640446eb8c040004c044004c040004c030dd5003c5900a0c020dd50014528200c180380098019baa0078a4d1365640041",
+      "hash": "7346b0f551083273412b082319f108077cd982b40d5ae90c1a00cfb8"
+    }
+  ],
+  "definitions": {
+    "ByteArray": {
+      "dataType": "bytes"
+    },
+    "Int": {
+      "dataType": "integer"
+    },
+    "List<ByteArray>": {
+      "dataType": "list",
+      "items": {
+        "$ref": "#/definitions/ByteArray"
+      }
+    },
+    "List<Int>": {
+      "dataType": "list",
+      "items": {
+        "$ref": "#/definitions/Int"
+      }
+    },
+    "List<bbs/types/G2Element>": {
+      "dataType": "list",
+      "items": {
+        "$ref": "#/definitions/bbs~1types~1G2Element"
+      }
+    },
+    "bbs/types/BBSProof": {
+      "title": "BBSProof",
+      "anyOf": [
+        {
+          "title": "BBSProof",
+          "dataType": "constructor",
+          "index": 0,
+          "fields": [
+            {
+              "title": "a_bar",
+              "$ref": "#/definitions/bbs~1types~1G1Element"
+            },
+            {
+              "title": "b_bar",
+              "$ref": "#/definitions/bbs~1types~1G1Element"
+            },
+            {
+              "title": "d",
+              "$ref": "#/definitions/bbs~1types~1G1Element"
+            },
+            {
+              "title": "e_hat",
+              "$ref": "#/definitions/ByteArray"
+            },
+            {
+              "title": "r1_hat",
+              "$ref": "#/definitions/ByteArray"
+            },
+            {
+              "title": "r3_hat",
+              "$ref": "#/definitions/ByteArray"
+            },
+            {
+              "title": "m_hat",
+              "$ref": "#/definitions/List<ByteArray>"
+            },
+            {
+              "title": "c",
+              "$ref": "#/definitions/ByteArray"
+            },
+            {
+              "title": "disclosed_indices",
+              "$ref": "#/definitions/List<Int>"
+            },
+            {
+              "title": "disclosed_values",
+              "$ref": "#/definitions/List<ByteArray>"
+            },
+            {
+              "title": "nonce",
+              "$ref": "#/definitions/ByteArray"
+            }
+          ]
+        }
+      ]
+    },
+    "bbs/types/G1Element": {
+      "title": "G1Element",
+      "description": "BBS+ data types for on-chain verification.",
+      "anyOf": [
+        {
+          "title": "G1Element",
+          "dataType": "constructor",
+          "index": 0,
+          "fields": [
+            {
+              "title": "bytes",
+              "$ref": "#/definitions/ByteArray"
+            }
+          ]
+        }
+      ]
+    },
+    "bbs/types/G2Element": {
+      "title": "G2Element",
+      "anyOf": [
+        {
+          "title": "G2Element",
+          "dataType": "constructor",
+          "index": 0,
+          "fields": [
+            {
+              "title": "bytes",
+              "$ref": "#/definitions/ByteArray"
+            }
+          ]
+        }
+      ]
+    },
+    "bbs/types/RegulatorRegistry": {
+      "title": "RegulatorRegistry",
+      "anyOf": [
+        {
+          "title": "RegulatorRegistry",
+          "dataType": "constructor",
+          "index": 0,
+          "fields": [
+            {
+              "title": "regulator_pk",
+              "$ref": "#/definitions/bbs~1types~1G2Element"
+            },
+            {
+              "title": "credential_schema",
+              "$ref": "#/definitions/List<ByteArray>"
+            }
+          ]
+        }
+      ]
+    },
+    "bls/types/AggregateSignatureRedeemer": {
+      "title": "AggregateSignatureRedeemer",
+      "description": "BLS aggregate signature types.",
+      "anyOf": [
+        {
+          "title": "AggregateSignatureRedeemer",
+          "dataType": "constructor",
+          "index": 0,
+          "fields": [
+            {
+              "title": "signature",
+              "$ref": "#/definitions/bbs~1types~1G1Element"
+            },
+            {
+              "title": "message",
+              "$ref": "#/definitions/ByteArray"
+            },
+            {
+              "title": "signer_indices",
+              "$ref": "#/definitions/List<Int>"
+            }
+          ]
+        }
+      ]
+    },
+    "bls/types/OracleRegistry": {
+      "title": "OracleRegistry",
+      "anyOf": [
+        {
+          "title": "OracleRegistry",
+          "dataType": "constructor",
+          "index": 0,
+          "fields": [
+            {
+              "title": "oracle_pks",
+              "$ref": "#/definitions/List<bbs~1types~1G2Element>"
+            },
+            {
+              "title": "quorum",
+              "$ref": "#/definitions/Int"
+            }
+          ]
+        }
+      ]
+    }
+  }
+}
