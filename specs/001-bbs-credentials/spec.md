@@ -110,6 +110,7 @@ Multiple independent oracles each sign the same message (e.g., a Merkle root upd
 - What happens when the on-chain proof verification exceeds script budgets? — The transaction fails. The system must report budget usage clearly so credential size (number of attributes) can be tuned.
 - What happens when a proof is replayed in a different transaction? — The validator must include transaction-specific context (e.g., a nonce or datum hash) in the verification to prevent replay.
 - What happens when oracles sign different messages? — Signatures over different messages cannot be aggregated meaningfully; the aggregate verification fails. The system must not silently accept mismatched aggregates.
+- What happens when end-to-end Cardano integration is needed before `cardano-node-clients` has tx-builder support? — Transaction-building remains out of scope and blocked; the feature must not introduce `cardano-api` as a workaround.
 
 ## Requirements *(mandatory)*
 
@@ -160,3 +161,5 @@ Multiple independent oracles each sign the same message (e.g., a Merkle root upd
 - Credential storage on the user side is out of scope — the library produces and consumes credentials as data structures; persistence is the caller's responsibility.
 - Revocation (User Story 5) is a separate implementation phase — the core issuance/proof/verification loop does not depend on it.
 - The BBS+ specification (draft-irtf-cfrg-bbs-signatures) is stable enough to implement against — if the spec changes, the implementation will need to be updated.
+- Cardano client integration, when introduced, will use `cardano-node-clients`; `cardano-api` is not an allowed fallback.
+- End-to-end transaction-building remains deferred until tx-builder support exists in `cardano-node-clients`.
