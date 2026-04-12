@@ -8,6 +8,7 @@
 RegulatorRegistry {
   regulator_pk: G2Element,
   credential_schema: List<ByteArray>,
+  signed_header: ByteArray,
 }
 ```
 
@@ -33,6 +34,7 @@ BBSProof {
 
 1. Reconstruct point B from disclosed messages and generators
 2. Compute Fiat-Shamir challenge, compare with `c`
+   using the regulator datum's `signed_header` in the domain calculation
 3. Check pairing: `final_exponentiation(miller_loop(a_bar, regulator_pk), miller_loop(b_bar, neg_g2))`
 4. Verify nonce binds to current transaction context
 

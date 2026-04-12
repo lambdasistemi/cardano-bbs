@@ -91,7 +91,8 @@
 - [x] T026 [US3] Implement BBS+ credential validator (reads regulator_pk from reference input) in onchain/validators/bbs_credential.ak
 - [ ] T027 [US3] Write Aiken unit tests: valid proof accepted, invalid proof rejected in onchain/test/bbs_verify_test.ak
 - [x] T028 [US3] Measure and document CPU/memory ExUnit costs for 1, 5, 10 attributes in specs/001-bbs-credentials/budget-report.md
-- [x] T029 [US3] Write round-trip integration test: off-chain issue+prove → serialize → on-chain verify in offchain/test/Integration/RoundTripSpec.hs
+- [x] T029 [US3] Write round-trip integration test: off-chain issue+prove → serialize registry/redeemer → on-chain verify in offchain/test/Integration/RoundTripSpec.hs
+- [x] T029a [US3] Carry signed-header bytes through RegulatorRegistry serialization and on-chain domain calculation in offchain/src/Cardano/BBS/Serialize.hs and onchain/lib/bbs/verify.ak
 
 **Checkpoint**: End-to-end flow works. Budget fits. Round-trip test passes.
 
@@ -208,7 +209,8 @@ Foundational
 3. Complete Phase 3: US1 — credential issuance works
 4. Complete Phase 4: US2 — unlinkable proofs work
 5. Complete Phase 5: US3 — on-chain verification works
-6. **STOP and VALIDATE**: End-to-end round-trip on testnet
+6. **STOP and VALIDATE**: End-to-end round-trip on validator path
+7. Add real transaction-building and submission through `cardano-node-clients`
 
 ### Incremental Delivery
 

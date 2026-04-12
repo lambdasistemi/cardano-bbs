@@ -28,5 +28,5 @@ Haskell (GHC 9.6+) for off-chain, Aiken (latest) for on-chain, Rust (via FFI) fo
 <!-- MANUAL ADDITIONS START -->
 - Constitutional rule: `cardano-api` is forbidden in this repository.
 - Constitutional rule: all future Cardano integration must use `cardano-node-clients`.
-- Constitutional rule: no tx-building implementation may be added until tx-builder support lands in `cardano-node-clients`.
+- Constitutional rule: transaction-building is allowed only through `cardano-node-clients`.
 <!-- MANUAL ADDITIONS END -->

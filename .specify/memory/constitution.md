@@ -45,12 +45,12 @@ Cardano integration rules are constitutional for this repository:
 
 - `cardano-api` is forbidden in this codebase.
 - All future Cardano client integration must go through `cardano-node-clients`.
-- No transaction-building implementation may be added until tx-builder support lands in `cardano-node-clients`.
+- Transaction-building implementation is allowed now that tx-builder support exists in `cardano-node-clients`.
 
 Implications:
 
 - Pure cryptography, serialization, and Aiken validator work may continue without Cardano client dependencies.
-- Any task that would otherwise introduce transaction construction must remain blocked, be deferred, or be rewritten around `cardano-node-clients` once the required tx-builder support exists.
+- Transaction construction, when introduced, must be built on `cardano-node-clients` rather than any alternative Cardano client layer.
 - Dependency or architectural proposals that reintroduce `cardano-api` are constitutionally invalid and must be rejected.
 
 ## Domain Constraints
@@ -69,7 +69,7 @@ Follow draft-irtf-cfrg-bbs-signatures. The signature scheme operates over BLS12-
 - On-chain: Aiken validators using native BLS12-381 built-ins (CIP-0381, CIP-0133)
 - Off-chain: Haskell library producing redeemers consumable by the Aiken validator
 - Cardano client integration, when introduced, must use `cardano-node-clients` only
-- Transaction-building is explicitly deferred until `cardano-node-clients` ships the required tx-builder support
+- Transaction-building is permitted through `cardano-node-clients`
 - Serialization: CBOR for on-chain data, matching Aiken's expected format
 - The redeemer carries the BBS+ proof; the validator checks the pairing equation
 

@@ -50,12 +50,14 @@ spec = describe "Unit.SerializeSpec" $ do
     decodePlutusData (publicKeyToCBOR pk)
       `shouldBe` Right (Constr 0 [Bytes (unPublicKey pk)])
 
-    decodePlutusData (regulatorRegistryToCBOR pk ["jurisdiction", "role"])
+    decodePlutusData
+      (regulatorRegistryToCBOR pk (Just (Header "signed-header")) ["jurisdiction", "role"])
       `shouldBe` Right
         ( Constr
             0
             [ Constr 0 [Bytes (unPublicKey pk)]
             , List [Bytes "jurisdiction", Bytes "role"]
+            , Bytes "signed-header"
             ]
         )
 

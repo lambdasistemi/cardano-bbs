@@ -106,6 +106,7 @@ publicKeyToCBOR :: PublicKey -> ByteString
 
 regulatorRegistryToCBOR
   :: PublicKey
+  -> Maybe Header
   -> [ByteString]
   -> ByteString
 ```
@@ -118,11 +119,13 @@ regulatorRegistryToCBOR
 - disclosed indices and disclosed values
 - the presentation header reused as the on-chain nonce
 
+`regulatorRegistryToCBOR` now also carries the optional credential signed header into the on-chain `RegulatorRegistry` datum so the Aiken verifier can reproduce the same BBS domain value as the off-chain issuer and prover.
+
 The module also exposes a minimal Plutus `Data` encoder/decoder so the off-chain contract can be tested without needing the full Plutus ledger API in this package.
 
 ## Caveats
 
 - `verifyCredential` and `verifyProof` currently return `False` on cryptographic failure rather than surfacing a rich error type.
-- The serializer currently targets the `BBSProof` and `RegulatorRegistry` data shapes only. The validator logic that consumes them is still stub-level.
+- The serializer currently targets the `BBSProof` and `RegulatorRegistry` data shapes only. It does not yet cover the separate BLS aggregation redeemer path.
 - `proofRedeemerToCBOR` requires the original attribute list and disclosure set because the raw proof bytes alone do not contain disclosed values or message-count context.
-- The API is usable for off-chain testing and redeemer construction today, but it is not yet the final end-to-end integration API.
+- The API is usable for off-chain testing and redeemer construction today, but it is not yet the final end-to-end transaction integration API.

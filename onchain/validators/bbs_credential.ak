@@ -81,6 +81,7 @@ fn sample_registry() -> RegulatorRegistry {
       #"6d30", #"6d31", #"6d32", #"6d33", #"6d34", #"6d35", #"6d36", #"6d37",
       #"6d38", #"6d39",
     ],
+    signed_header: #"",
   }
 }
 

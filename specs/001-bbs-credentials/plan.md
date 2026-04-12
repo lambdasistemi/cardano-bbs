@@ -23,7 +23,7 @@ Implement BBS+ anonymous credentials for Cardano: a Haskell off-chain library fo
 
 - `cardano-api` is forbidden for this feature.
 - When Cardano client integration is needed, it must use `cardano-node-clients`.
-- Transaction-building work is blocked until tx-builder support lands in `cardano-node-clients`.
+- Transaction-building work is permitted through `cardano-node-clients`.
 
 ## Constitution Check
 
