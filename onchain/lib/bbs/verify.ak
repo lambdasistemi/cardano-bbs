@@ -6,7 +6,7 @@ use aiken/crypto/bls12_381/scalar
 use aiken/primitive/bytearray
 use bbs/generators
 use bbs/transcript
-use bbs/types.{BBSProof, G1Element, G2Element, RegulatorRegistry}
+use bbs/types as bbs_types
 
 const compressed_g1_bytes = 48
 
@@ -16,8 +16,8 @@ const scalar_bytes = 32
 
 /// BBS+ proof verification using BLS12-381 pairings.
 pub fn verify(
-  registry: RegulatorRegistry,
-  proof: BBSProof,
+  registry: bbs_types.RegulatorRegistry,
+  proof: bbs_types.BBSProof,
   context_nonce: ByteArray,
 ) -> Bool {
   and {
@@ -39,7 +39,7 @@ pub fn verify(
   }
 }
 
-fn valid_regulator_pk(registry: RegulatorRegistry) -> Bool {
+fn valid_regulator_pk(registry: bbs_types.RegulatorRegistry) -> Bool {
   bytearray.length(registry.regulator_pk.bytes) == compressed_g2_bytes
 }
 
@@ -53,11 +53,14 @@ fn valid_scalar(bytes: ByteArray) -> Bool {
   ) == bytes
 }
 
-fn valid_nonce(proof: BBSProof, context_nonce: ByteArray) -> Bool {
+fn valid_nonce(proof: bbs_types.BBSProof, context_nonce: ByteArray) -> Bool {
   proof.nonce == context_nonce && !bytearray.is_empty(context_nonce)
 }
 
-fn valid_disclosure_shape(registry: RegulatorRegistry, proof: BBSProof) -> Bool {
+fn valid_disclosure_shape(
+  registry: bbs_types.RegulatorRegistry,
+  proof: bbs_types.BBSProof,
+) -> Bool {
   let total_attributes = list.length(registry.credential_schema)
   let disclosed_count = list.length(proof.disclosed_indices)
   let hidden_count = list.length(proof.m_hat)
@@ -66,8 +69,8 @@ fn valid_disclosure_shape(registry: RegulatorRegistry, proof: BBSProof) -> Bool 
 }
 
 fn valid_disclosure_indices(
-  registry: RegulatorRegistry,
-  proof: BBSProof,
+  registry: bbs_types.RegulatorRegistry,
+  proof: bbs_types.BBSProof,
 ) -> Bool {
   let total_attributes = list.length(registry.credential_schema)
 
@@ -91,12 +94,16 @@ fn do_valid_disclosure_indices(
   }
 }
 
-fn valid_disclosed_values(proof: BBSProof) -> Bool {
+fn valid_disclosed_values(proof: bbs_types.BBSProof) -> Bool {
   list.all(proof.disclosed_values, fn(value) { !bytearray.is_empty(value) })
 }
 
-fn valid_challenge(registry: RegulatorRegistry, proof: BBSProof) -> Bool {
+fn valid_challenge(
+  registry: bbs_types.RegulatorRegistry,
+  proof: bbs_types.BBSProof,
+) -> Bool {
   let total_attributes = list.length(registry.credential_schema)
+  let all_generators = generators.create_generators(total_attributes + 1)
   let disclosed_scalars = list.map(
     proof.disclosed_values,
     transcript.map_message_to_scalar_as_hash,
@@ -112,7 +119,13 @@ fn valid_challenge(registry: RegulatorRegistry, proof: BBSProof) -> Bool {
     0,
   )
   let t_1 = compute_t_1(proof)
-  let t_2 = compute_t_2(proof, disclosed_scalars, domain, hidden_indices)
+  let t_2 = compute_t_2(
+    proof,
+    disclosed_scalars,
+    domain,
+    hidden_indices,
+    all_generators,
+  )
 
   transcript.calculate_challenge(
     proof.disclosed_indices,
@@ -127,7 +140,10 @@ fn valid_challenge(registry: RegulatorRegistry, proof: BBSProof) -> Bool {
   ) == proof.c
 }
 
-fn valid_pairing(registry: RegulatorRegistry, proof: BBSProof) -> Bool {
+fn valid_pairing(
+  registry: bbs_types.RegulatorRegistry,
+  proof: bbs_types.BBSProof,
+) -> Bool {
   pairing.final_exponentiation(
     pairing.miller_loop(
       g1.decompress(proof.a_bar.bytes),
@@ -137,7 +153,7 @@ fn valid_pairing(registry: RegulatorRegistry, proof: BBSProof) -> Bool {
   )
 }
 
-fn compute_t_1(proof: BBSProof) -> G1Element {
+fn compute_t_1(proof: bbs_types.BBSProof) -> bbs_types.G1Element {
   compress_point(
     add_native_points(
       add_native_points(
@@ -150,38 +166,56 @@ fn compute_t_1(proof: BBSProof) -> G1Element {
 }
 
 fn compute_t_2(
-  proof: BBSProof,
+  proof: bbs_types.BBSProof,
   disclosed_scalars: List<ByteArray>,
   domain: ByteArray,
   hidden_indices: List<Int>,
-) -> G1Element {
-  let b_v = compute_b_v(proof.disclosed_indices, disclosed_scalars, domain)
+  all_generators: List<bbs_types.G1Element>,
+) -> bbs_types.G1Element {
+  let b_v = compute_b_v(
+    proof.disclosed_indices,
+    disclosed_scalars,
+    domain,
+    all_generators,
+  )
   let initial = add_native_points(
     scale_native_point(b_v, proof.c),
     scale_native_point(decompress_point(proof.d), proof.r3_hat),
   )
 
-  compress_point(add_hidden_terms(hidden_indices, proof.m_hat, initial))
+  compress_point(
+    add_hidden_terms(hidden_indices, proof.m_hat, initial, all_generators),
+  )
 }
 
 fn compute_b_v(
   disclosed_indices: List<Int>,
   disclosed_scalars: List<ByteArray>,
   domain: ByteArray,
-) {
+  all_generators: List<bbs_types.G1Element>,
+) -> G1Element {
   let initial = add_native_points(
     decompress_point(generators.p_1()),
-    scale_native_point(decompress_point(generators.q_1()), domain),
+    scale_native_point(
+      decompress_point(expect_generator(all_generators, 0)),
+      domain,
+    ),
   )
 
-  add_disclosed_terms(disclosed_indices, disclosed_scalars, initial)
+  add_disclosed_terms(
+    disclosed_indices,
+    disclosed_scalars,
+    initial,
+    all_generators,
+  )
 }
 
 fn add_disclosed_terms(
   disclosed_indices: List<Int>,
   disclosed_scalars: List<ByteArray>,
-  acc,
-) {
+  acc: G1Element,
+  all_generators: List<bbs_types.G1Element>,
+) -> G1Element {
   when disclosed_indices is {
     [] -> acc
     [index, ..rest_indexes] ->
@@ -194,10 +228,11 @@ fn add_disclosed_terms(
             add_native_points(
               acc,
               scale_native_point(
-                decompress_point(expect_generator(index)),
+                decompress_point(expect_generator(all_generators, index + 1)),
                 message,
               ),
             ),
+            all_generators,
           )
       }
   }
@@ -206,8 +241,9 @@ fn add_disclosed_terms(
 fn add_hidden_terms(
   hidden_indices: List<Int>,
   hidden_scalars: List<ByteArray>,
-  acc,
-) {
+  acc: G1Element,
+  all_generators: List<bbs_types.G1Element>,
+) -> G1Element {
   when hidden_indices is {
     [] -> acc
     [index, ..rest_indexes] ->
@@ -220,10 +256,11 @@ fn add_hidden_terms(
             add_native_points(
               acc,
               scale_native_point(
-                decompress_point(expect_generator(index)),
+                decompress_point(expect_generator(all_generators, index + 1)),
                 value,
               ),
             ),
+            all_generators,
           )
       }
   }
@@ -255,32 +292,35 @@ fn contains_index(indices: List<Int>, target: Int) -> Bool {
   }
 }
 
-fn expect_generator(index: Int) -> G1Element {
-  when generators.message_generator(index) is {
+fn expect_generator(
+  all_generators: List<bbs_types.G1Element>,
+  index: Int,
+) -> bbs_types.G1Element {
+  when list.at(all_generators, index) is {
     Some(point) -> point
-    None -> G1Element { bytes: #"" }
+    None -> bbs_types.G1Element { bytes: #"" }
   }
 }
 
-fn decompress_point(point: G1Element) {
+fn decompress_point(point: bbs_types.G1Element) -> G1Element {
   g1.decompress(point.bytes)
 }
 
-fn compress_point(point) -> G1Element {
-  G1Element { bytes: g1.compress(point) }
+fn compress_point(point: G1Element) -> bbs_types.G1Element {
+  bbs_types.G1Element { bytes: g1.compress(point) }
 }
 
-fn add_native_points(left, right) {
+fn add_native_points(left: G1Element, right: G1Element) -> G1Element {
   g1.add(left, right)
 }
 
-fn scale_native_point(point, factor: ByteArray) {
+fn scale_native_point(point: G1Element, factor: ByteArray) -> G1Element {
   g1.scale(point, scalar.from_bytes(factor))
 }
 
 test verify_accepts_structurally_valid_proof() {
-  let registry = RegulatorRegistry {
-    regulator_pk: G2Element {
+  let registry = bbs_types.RegulatorRegistry {
+    regulator_pk: bbs_types.G2Element {
       bytes: #"a820f230f6ae38503b86c70dc50b61c58a77e45c39ab25c0652bbaa8fa136f2851bd4781c9dcde39fc9d1d52c9e60268061e7d7632171d91aa8d460acee0e96f1e7c4cfb12d3ff9ab5d5dc91c277db75c845d649ef3c4f63aebc364cd55ded0c",
     },
     credential_schema: [
@@ -289,14 +329,14 @@ test verify_accepts_structurally_valid_proof() {
     ],
   }
 
-  let proof = BBSProof {
-    a_bar: G1Element {
+  let proof = bbs_types.BBSProof {
+    a_bar: bbs_types.G1Element {
       bytes: #"81925c2e525d9fbb0ba95b438b5a13fff5874c7c0515c193628d7d143ddc3bb487771ad73658895997a88dd5b254ed29",
     },
-    b_bar: G1Element {
+    b_bar: bbs_types.G1Element {
       bytes: #"abc019bfca62c09b8dafb37e5f09b1d380e084ec3623d071ec38d6b8602af93aa0ddbada307c9309cca86be16db53dc7",
     },
-    d: G1Element {
+    d: bbs_types.G1Element {
       bytes: #"ac310574f509c712bb1a181d64ea3c1ee075c018a2bc773e2480b5c033ccb9bfea5af347a88ab83746c9342ba76db367",
     },
     e_hat: #"5ff70ce9006d166fd813a81b448a632216521c864594f3f92965974914992f8d",
@@ -328,8 +368,8 @@ test verify_accepts_structurally_valid_proof() {
 }
 
 test verify_rejects_nonce_mismatch() {
-  let registry = RegulatorRegistry {
-    regulator_pk: G2Element {
+  let registry = bbs_types.RegulatorRegistry {
+    regulator_pk: bbs_types.G2Element {
       bytes: #"a820f230f6ae38503b86c70dc50b61c58a77e45c39ab25c0652bbaa8fa136f2851bd4781c9dcde39fc9d1d52c9e60268061e7d7632171d91aa8d460acee0e96f1e7c4cfb12d3ff9ab5d5dc91c277db75c845d649ef3c4f63aebc364cd55ded0c",
     },
     credential_schema: [
@@ -338,14 +378,14 @@ test verify_rejects_nonce_mismatch() {
     ],
   }
 
-  let proof = BBSProof {
-    a_bar: G1Element {
+  let proof = bbs_types.BBSProof {
+    a_bar: bbs_types.G1Element {
       bytes: #"81925c2e525d9fbb0ba95b438b5a13fff5874c7c0515c193628d7d143ddc3bb487771ad73658895997a88dd5b254ed29",
     },
-    b_bar: G1Element {
+    b_bar: bbs_types.G1Element {
       bytes: #"abc019bfca62c09b8dafb37e5f09b1d380e084ec3623d071ec38d6b8602af93aa0ddbada307c9309cca86be16db53dc7",
     },
-    d: G1Element {
+    d: bbs_types.G1Element {
       bytes: #"ac310574f509c712bb1a181d64ea3c1ee075c018a2bc773e2480b5c033ccb9bfea5af347a88ab83746c9342ba76db367",
     },
     e_hat: #"5ff70ce9006d166fd813a81b448a632216521c864594f3f92965974914992f8d",
@@ -378,8 +418,8 @@ test verify_rejects_nonce_mismatch() {
 
 test verify_rejects_unsorted_disclosure_indices() {
   let registry = normalize_registry(
-    RegulatorRegistry {
-      regulator_pk: G2Element { bytes: #"11" },
+    bbs_types.RegulatorRegistry {
+      regulator_pk: bbs_types.G2Element { bytes: #"11" },
       credential_schema: [
         #"6a7572697364696374696f6e", #"726f6c65", #"737461747573",
       ],
@@ -387,10 +427,10 @@ test verify_rejects_unsorted_disclosure_indices() {
   )
 
   let proof = normalize_proof(
-    BBSProof {
-      a_bar: G1Element { bytes: #"01" },
-      b_bar: G1Element { bytes: #"02" },
-      d: G1Element { bytes: #"03" },
+    bbs_types.BBSProof {
+      a_bar: bbs_types.G1Element { bytes: #"01" },
+      b_bar: bbs_types.G1Element { bytes: #"02" },
+      d: bbs_types.G1Element { bytes: #"03" },
       e_hat: #"10",
       r1_hat: #"11",
       r3_hat: #"12",
@@ -406,8 +446,8 @@ test verify_rejects_unsorted_disclosure_indices() {
 }
 
 test verify_rejects_challenge_mismatch() {
-  let registry = RegulatorRegistry {
-    regulator_pk: G2Element {
+  let registry = bbs_types.RegulatorRegistry {
+    regulator_pk: bbs_types.G2Element {
       bytes: #"a820f230f6ae38503b86c70dc50b61c58a77e45c39ab25c0652bbaa8fa136f2851bd4781c9dcde39fc9d1d52c9e60268061e7d7632171d91aa8d460acee0e96f1e7c4cfb12d3ff9ab5d5dc91c277db75c845d649ef3c4f63aebc364cd55ded0c",
     },
     credential_schema: [
@@ -416,14 +456,14 @@ test verify_rejects_challenge_mismatch() {
     ],
   }
 
-  let proof = BBSProof {
-    a_bar: G1Element {
+  let proof = bbs_types.BBSProof {
+    a_bar: bbs_types.G1Element {
       bytes: #"81925c2e525d9fbb0ba95b438b5a13fff5874c7c0515c193628d7d143ddc3bb487771ad73658895997a88dd5b254ed29",
     },
-    b_bar: G1Element {
+    b_bar: bbs_types.G1Element {
       bytes: #"abc019bfca62c09b8dafb37e5f09b1d380e084ec3623d071ec38d6b8602af93aa0ddbada307c9309cca86be16db53dc7",
     },
-    d: G1Element {
+    d: bbs_types.G1Element {
       bytes: #"ac310574f509c712bb1a181d64ea3c1ee075c018a2bc773e2480b5c033ccb9bfea5af347a88ab83746c9342ba76db367",
     },
     e_hat: #"5ff70ce9006d166fd813a81b448a632216521c864594f3f92965974914992f8d",
@@ -454,9 +494,11 @@ test verify_rejects_challenge_mismatch() {
   )
 }
 
-pub fn normalize_registry(registry: RegulatorRegistry) -> RegulatorRegistry {
-  RegulatorRegistry {
-    regulator_pk: G2Element {
+pub fn normalize_registry(
+  registry: bbs_types.RegulatorRegistry,
+) -> bbs_types.RegulatorRegistry {
+  bbs_types.RegulatorRegistry {
+    regulator_pk: bbs_types.G2Element {
       bytes: bytearray.concat(
         registry.regulator_pk.bytes,
         zeroes(
@@ -468,21 +510,21 @@ pub fn normalize_registry(registry: RegulatorRegistry) -> RegulatorRegistry {
   }
 }
 
-pub fn normalize_proof(proof: BBSProof) -> BBSProof {
-  BBSProof {
-    a_bar: G1Element {
+pub fn normalize_proof(proof: bbs_types.BBSProof) -> bbs_types.BBSProof {
+  bbs_types.BBSProof {
+    a_bar: bbs_types.G1Element {
       bytes: bytearray.concat(
         proof.a_bar.bytes,
         zeroes(compressed_g1_bytes - bytearray.length(proof.a_bar.bytes)),
       ),
     },
-    b_bar: G1Element {
+    b_bar: bbs_types.G1Element {
       bytes: bytearray.concat(
         proof.b_bar.bytes,
         zeroes(compressed_g1_bytes - bytearray.length(proof.b_bar.bytes)),
       ),
     },
-    d: G1Element {
+    d: bbs_types.G1Element {
       bytes: bytearray.concat(
         proof.d.bytes,
         zeroes(compressed_g1_bytes - bytearray.length(proof.d.bytes)),
