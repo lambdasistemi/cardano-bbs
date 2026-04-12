@@ -70,6 +70,8 @@ deriveProof
   -> IO Proof
 ```
 
+`deriveProof` already supports selective disclosure directly through `DisclosureSet`, where each integer is an attribute index to reveal.
+
 ### Proof Verification
 
 ```haskell

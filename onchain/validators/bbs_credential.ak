@@ -1,3 +1,4 @@
+use aiken/collection/list
 use bbs/types.{BBSProof, G1Element, G2Element, RegulatorRegistry}
 use bbs/verify
 use cardano/script_context.{ScriptContext}
@@ -31,6 +32,26 @@ test spend_accepts_structurally_valid_tx_bound_proof() {
   let proof = sample_proof()
 
   bbs_credential.spend(Some(registry), proof, sample_output_reference(), self)
+}
+
+test spend_accepts_partial_disclosure_proof() {
+  let registry = sample_registry()
+  let self = Transaction {
+    ..placeholder,
+    id: #"bed231d880675ed101ead304512e043ade9958dd0241ea70b4b3957fba941501",
+  }
+  let proof = sample_proof()
+
+  and {
+    proof.disclosed_indices == [0, 2, 4, 6],
+    proof.disclosed_values == [
+      #"9872ad089e452c7b6e283dfac2a80d58e8d0ff71cc4d5e310a1debdda4a45f02",
+      #"7372e9daa5ed31e6cd5c825eac1b855e84476a1d94932aa348e07b73",
+      #"496694774c5604ab1b2544eababcf0f53278ff50", #"d183ddc6e2665aa4e2f088af",
+    ],
+    list.length(proof.m_hat) == 6,
+    bbs_credential.spend(Some(registry), proof, sample_output_reference(), self),
+  }
 }
 
 test spend_rejects_wrong_transaction_nonce() {

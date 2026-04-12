@@ -16,6 +16,7 @@ The current coverage now spans imported cryptographic fixtures, off-chain API ch
 - reproduce an imported deterministic signature fixture
 - verify an imported signature fixture
 - verify an imported proof fixture
+- verify selective-disclosure proof fixtures, including no-header and no-presentation-header cases
 
 ## Commands
 
@@ -33,4 +34,4 @@ just test-offchain
 
 ## Current Gap
 
-Validator coverage is still mostly embedded inside [verify.ak](/code/cardano-bbs-verify/onchain/lib/bbs/verify.ak) and [bbs_credential.ak](/code/cardano-bbs-verify/onchain/validators/bbs_credential.ak). The next cleanup step is to move that coverage into dedicated `onchain/test/` modules.
+Validator coverage is still mostly embedded inside [verify.ak](/code/cardano-bbs-verify/onchain/lib/bbs/verify.ak) and [bbs_credential.ak](/code/cardano-bbs-verify/onchain/validators/bbs_credential.ak). The current Aiken toolchain does not exercise standalone `onchain/test/` modules in this repo, so active validator tests live with the validator code for now.
