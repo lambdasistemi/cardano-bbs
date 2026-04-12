@@ -43,8 +43,7 @@ instance Aeson.FromJSON SelectiveDisclosureFixture where
         , fixturePresentationHeader = PresentationHeader (decodeHexUtf8 ph)
         , fixtureDisclosedIndexes = disclosed
         , fixtureDisclosedMessages =
-            fmap (Attribute . decodeHexUtf8) $
-              selectDisclosed messages disclosed
+            Attribute . decodeHexUtf8 <$> selectDisclosed messages disclosed
         , fixtureProof = Proof (decodeHexUtf8 proof)
         }
 
@@ -54,7 +53,7 @@ emptyMeansNothing hex = Just (Header (decodeHexUtf8 hex))
 
 selectDisclosed :: [String] -> [Int] -> [String]
 selectDisclosed messages =
-  fmap (\index -> messages !! index)
+  fmap (messages !!)
 
 decodeHexUtf8 :: String -> BS.ByteString
 decodeHexUtf8 input =
