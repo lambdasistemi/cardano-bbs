@@ -46,5 +46,9 @@ hlint:
 build-ffi:
     cd offchain/cbits/zkryptium-ffi && cargo build --release
 
+# Build Lean spec
+build-lean:
+    cd lean && lake build
+
 # CI: full check
 ci: build test format-check hlint

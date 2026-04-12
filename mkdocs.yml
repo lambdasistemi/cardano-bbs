@@ -42,6 +42,11 @@ nav:
   - Home: index.md
   - Getting Started: getting-started.md
   - Architecture: architecture.md
+  - Concepts:
+    - concepts/index.md
+    - ZK Selective Disclosure: concepts/zk-selective-disclosure.md
+    - Use Cases: concepts/zk-usecases.md
+    - Trusted Setup Ceremony: concepts/zk-ceremony.md
   - Off-Chain API: offchain-api.md
   - On-Chain Status: onchain.md
   - Testing: testing.md
