@@ -24,4 +24,5 @@ pub type BBSProof {
 pub type RegulatorRegistry {
   regulator_pk: G2Element,
   credential_schema: List<ByteArray>,
+  signed_header: ByteArray,
 }

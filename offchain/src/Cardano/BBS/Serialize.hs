@@ -20,6 +20,7 @@ module Cardano.BBS.Serialize (
 import Cardano.BBS.FFI (
   Attribute (..),
   DisclosureSet,
+  Header (..),
   PresentationHeader (..),
   Proof (..),
   PublicKey (..),
@@ -94,6 +95,7 @@ data BBSProofDatum = BBSProofDatum
 data RegulatorRegistryDatum = RegulatorRegistryDatum
   { regulatorPk :: G2Element
   , credentialSchema :: [ByteString]
+  , signedHeader :: ByteString
   }
   deriving (Eq, Show)
 
@@ -154,16 +156,21 @@ publicKeyData (PublicKey pkBytes) = G2Element pkBytes
 publicKeyToCBOR :: PublicKey -> ByteString
 publicKeyToCBOR = encodePlutusData . g2ElementToData . publicKeyData
 
-regulatorRegistryData :: PublicKey -> [ByteString] -> RegulatorRegistryDatum
-regulatorRegistryData (PublicKey pkBytes) schema =
+regulatorRegistryData ::
+  PublicKey ->
+  Maybe Header ->
+  [ByteString] ->
+  RegulatorRegistryDatum
+regulatorRegistryData (PublicKey pkBytes) mHeader schema =
   RegulatorRegistryDatum
     { regulatorPk = G2Element pkBytes
     , credentialSchema = schema
+    , signedHeader = maybe BS.empty unHeader mHeader
     }
 
-regulatorRegistryToCBOR :: PublicKey -> [ByteString] -> ByteString
-regulatorRegistryToCBOR pk =
-  encodePlutusData . regulatorRegistryDatumToData . regulatorRegistryData pk
+regulatorRegistryToCBOR :: PublicKey -> Maybe Header -> [ByteString] -> ByteString
+regulatorRegistryToCBOR pk mHeader =
+  encodePlutusData . regulatorRegistryDatumToData . regulatorRegistryData pk mHeader
 
 encodePlutusData :: PlutusData -> ByteString
 encodePlutusData = toStrictByteString . encodeData
@@ -196,6 +203,7 @@ regulatorRegistryDatumToData registry =
     0
     [ g2ElementToData (regulatorPk registry)
     , List (Bytes <$> credentialSchema registry)
+    , Bytes (signedHeader registry)
     ]
 
 g1ElementToData :: G1Element -> PlutusData

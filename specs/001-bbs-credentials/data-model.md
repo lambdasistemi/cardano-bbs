@@ -69,6 +69,7 @@ For multi-oracle use case.
 |---|---|---|
 | regulator_pk | G2Element | Regulator's BBS+ public key |
 | credential_schema | [ByteArray] | Attribute names/types for validation context |
+| signed_header | ByteArray | Credential header bytes that must be reused in the on-chain BBS domain calculation |
 
 ## Relationships
 

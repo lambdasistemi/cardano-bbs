@@ -5,6 +5,7 @@ module Integration.RoundTripSpec (spec) where
 
 import Cardano.BBS.Credential (
   Attribute (..),
+  Header (..),
   issueCredential,
  )
 import Cardano.BBS.KeyGen (generateKeyPair)
@@ -61,6 +62,7 @@ spec =
             ]
           disclosed = [0, 2]
           disclosedAttrs = [Attribute "jurisdiction:EU", Attribute "status:active"]
+          header = Just (Header "cardano-bbs-signed-header")
           txId =
             BS.pack
               [ 0x10
@@ -98,15 +100,15 @@ spec =
               ]
           ph = PresentationHeader txId
 
-      credential <- issueCredential sk pk Nothing attrs
-      proof <- deriveProof pk credential Nothing ph attrs disclosed
-      verifyProof pk Nothing ph disclosedAttrs disclosed proof `shouldReturn` True
+      credential <- issueCredential sk pk header attrs
+      proof <- deriveProof pk credential header ph attrs disclosed
+      verifyProof pk header ph disclosedAttrs disclosed proof `shouldReturn` True
 
       proofDatum <- expectRight "proofRedeemerData" $ proofRedeemerData proof ph attrs disclosed
-      let registryDatum = regulatorRegistryData pk (attributeBytes <$> attrs)
+      let registryDatum = regulatorRegistryData pk header (attributeBytes <$> attrs)
 
       proofCbor <- expectRight "proofRedeemerToCBOR" $ proofRedeemerToCBOR proof ph attrs disclosed
-      let registryCbor = regulatorRegistryToCBOR pk (attributeBytes <$> attrs)
+      let registryCbor = regulatorRegistryToCBOR pk header (attributeBytes <$> attrs)
       decodePlutusData proofCbor `shouldSatisfy` isRight
       decodePlutusData registryCbor `shouldSatisfy` isRight
 
@@ -199,7 +201,8 @@ renderRegistry registry =
   unlines
     [ "RegulatorRegistry {"
     , "    regulator_pk: " <> renderG2 (regulatorPk registry) <> ","
-    , "    credential_schema: " <> renderBytesList (credentialSchema registry)
+    , "    credential_schema: " <> renderBytesList (credentialSchema registry) <> ","
+    , "    signed_header: " <> renderBytes (signedHeader registry)
     , "  }"
     ]
 

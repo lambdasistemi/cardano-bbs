@@ -44,9 +44,10 @@ emitCase messageCount disclosedCount = do
   case proofRedeemerData proof ph attrs disclosed of
     Left err -> fail err
     Right pd -> do
-      let rd = regulatorRegistryData pk (replicate messageCount "6d")
+      let rd = regulatorRegistryData pk Nothing (replicate messageCount "6d")
       putStrLn $ "schema_len=" <> show (length (credentialSchema rd))
       putStrLn $ "pk=" <> renderByteString (g2Bytes (regulatorPk rd))
+      putStrLn $ "signed_header=" <> renderByteString (signedHeader rd)
       putStrLn $ "a_bar=" <> renderByteString (g1Bytes (aBar pd))
       putStrLn $ "b_bar=" <> renderByteString (g1Bytes (bBar pd))
       putStrLn $ "d=" <> renderByteString (g1Bytes (d pd))

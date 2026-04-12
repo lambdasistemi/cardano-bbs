@@ -7,6 +7,7 @@ test verify_accepts_budget_case_single_attribute() {
       bytes: #"a0a373679b1d82fd2fc759a4daf3dec73841ac6fd50ce660b9b3d25c175b38429754fe739f59b6ec3be2a1fa5906af6402b999d79f08efb9306f856578f68bb8660b294d2cfd495e1ac118828ec3dd9ed385ec901d80a67c777f8c3eff60ecf0",
     },
     credential_schema: [#"6d"],
+    signed_header: #"",
   }
 
   let proof = BBSProof {
@@ -38,6 +39,7 @@ test verify_accepts_budget_case_five_attributes() {
       bytes: #"82edf20881128af08edcc830be8e3811406c1c9daafad12da5854ae7ff544cda0456fd8d67506978533935b2a81eaa06051712ae8c123606266eaae12dc39a678173c7456bf45f54aa4f52b199b4dfb43c1a87637026e8287eef6775becb522f",
     },
     credential_schema: [#"6d", #"6d", #"6d", #"6d", #"6d"],
+    signed_header: #"",
   }
 
   let proof = BBSProof {
@@ -76,6 +78,7 @@ test verify_accepts_budget_case_ten_attributes() {
       #"6d30", #"6d31", #"6d32", #"6d33", #"6d34", #"6d35", #"6d36", #"6d37",
       #"6d38", #"6d39",
     ],
+    signed_header: #"",
   }
 
   let proof = BBSProof {

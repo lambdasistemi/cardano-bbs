@@ -110,7 +110,7 @@ fn valid_challenge(
   )
   let domain = transcript.calculate_domain(
     registry.regulator_pk,
-    #"",
+    registry.signed_header,
     total_attributes,
   )
   let hidden_indices = remaining_indices(
@@ -327,6 +327,7 @@ test verify_accepts_structurally_valid_proof() {
       #"6d30", #"6d31", #"6d32", #"6d33", #"6d34", #"6d35", #"6d36", #"6d37",
       #"6d38", #"6d39",
     ],
+    signed_header: #"",
   }
 
   let proof = bbs_types.BBSProof {
@@ -376,6 +377,7 @@ test verify_rejects_nonce_mismatch() {
       #"6d30", #"6d31", #"6d32", #"6d33", #"6d34", #"6d35", #"6d36", #"6d37",
       #"6d38", #"6d39",
     ],
+    signed_header: #"",
   }
 
   let proof = bbs_types.BBSProof {
@@ -423,6 +425,7 @@ test verify_rejects_unsorted_disclosure_indices() {
       credential_schema: [
         #"6a7572697364696374696f6e", #"726f6c65", #"737461747573",
       ],
+      signed_header: #"",
     },
   )
 
@@ -454,6 +457,7 @@ test verify_rejects_challenge_mismatch() {
       #"6d30", #"6d31", #"6d32", #"6d33", #"6d34", #"6d35", #"6d36", #"6d37",
       #"6d38", #"6d39",
     ],
+    signed_header: #"",
   }
 
   let proof = bbs_types.BBSProof {
@@ -507,6 +511,7 @@ pub fn normalize_registry(
       ),
     },
     credential_schema: registry.credential_schema,
+    signed_header: registry.signed_header,
   }
 }
 

@@ -8,8 +8,8 @@ Measurements were taken from `aiken check` execution units on real verifier acce
 
 Current verifier assumptions:
 
-- no signed header is carried on-chain yet
-- generated budget cases therefore use `header = ""`
+- signed-header support exists in the verifier and in datum serialization
+- the generated budget cases in this report still use `header = ""`
 - the nonce is still bound to the presentation header / transaction context
 - the verifier includes:
   - disclosure-shape checks
@@ -20,14 +20,14 @@ Current verifier assumptions:
 
 | Attributes | Disclosed | Memory ExUnits | CPU ExUnits | Status vs 10B CPU budget |
 | --- | ---: | ---: | ---: | --- |
-| 1 | 1 | 1,826,482 | 2,805,715,072 | Pass |
-| 5 | 2 | 3,613,325 | 4,311,717,538 | Pass |
-| 10 | 4 | 6,093,611 | 6,268,412,930 | Pass |
+| 1 | 1 | 1,828,884 | 2,806,522,370 | Pass |
+| 5 | 2 | 3,615,727 | 4,312,524,836 | Pass |
+| 10 | 4 | 6,096,013 | 6,269,220,228 | Pass |
 
 ## Interpretation
 
 - The current verifier now fits within the 10B CPU transaction budget for the measured 1, 5, and 10 attribute cases.
-- This satisfies the current FR-007 and SC-006 budget target for the no-header proof flow.
+- This satisfies the current FR-007 and SC-006 budget target for the currently measured empty-header proof flow.
 - Compared to the previous measured version, CPU improved by roughly:
   - 5.2% at 1 attribute
   - 29.9% at 5 attributes
@@ -42,6 +42,6 @@ Current verifier assumptions:
 
 ## Immediate Follow-Up
 
-1. Re-measure after adding signed-header support, because the current measurements still assume `header = ""`.
-2. Re-run the budget suite when selective disclosure logic changes, because partial-disclosure handling can still shift verifier cost.
-3. Keep the [RoundTripSpec.hs](/code/cardano-bbs-verify/offchain/test/Integration/RoundTripSpec.hs) integration fixture aligned with any future signed-header or redeemer-shape changes.
+1. Re-measure with non-empty signed headers, because the current measurements still assume `header = ""`.
+2. Build the first submitted-transaction integration slice through `cardano-node-clients`.
+3. Keep the [RoundTripSpec.hs](/code/cardano-bbs-verify/offchain/test/Integration/RoundTripSpec.hs) integration fixture aligned with any future redeemer-shape changes.
