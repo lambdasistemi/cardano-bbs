@@ -47,7 +47,7 @@ The important result is that the current no-header verifier is now under the 10B
 The next serious on-chain tasks are:
 
 1. carry the signed header into the on-chain verification inputs so transcript recomputation matches the full BBS spec
-2. add a round-trip proof-generation test that drives the on-chain verifier assumptions from off-chain outputs
-3. extend the verifier path to selective disclosure without regressing the current budget envelope
+2. extend the verifier path to selective disclosure without regressing the current budget envelope
+3. add dedicated Aiken-side test modules under `onchain/test/` instead of keeping the current coverage embedded in library and validator modules
 
 Until those are done, any documentation describing on-chain verification as fully complete would be false.
