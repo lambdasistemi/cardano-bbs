@@ -1,6 +1,7 @@
 module Main where
 
 import qualified Conformance.ProofSpec
+import qualified Conformance.SelectiveDisclosureSpec
 import qualified Conformance.SignatureSpec
 import qualified Integration.RoundTripSpec
 import Test.Hspec
@@ -14,3 +15,4 @@ main = hspec $ do
   Unit.SerializeSpec.spec
   Conformance.SignatureSpec.spec
   Conformance.ProofSpec.spec
+  Conformance.SelectiveDisclosureSpec.spec

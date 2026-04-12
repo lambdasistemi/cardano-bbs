@@ -105,10 +105,10 @@
 
 ### Implementation for User Story 4
 
-- [ ] T030 [US4] Extend proof derivation to accept disclosure set (indices to reveal) in offchain/src/Cardano/BBS/Proof.hs
-- [ ] T031 [US4] Extend on-chain verifier to handle partial disclosure (reconstruct B from disclosed subset) in onchain/lib/bbs/verify.ak
-- [ ] T032 [US4] Write conformance tests for selective disclosure against IETF proof fixtures in offchain/test/Conformance/SelectiveDisclosureSpec.hs
-- [ ] T033 [US4] Write Aiken test: partial disclosure proof accepted, disclosed values match in onchain/test/bbs_selective_test.ak
+- [x] T030 [US4] Extend proof derivation to accept disclosure set (indices to reveal) in offchain/src/Cardano/BBS/Proof.hs
+- [x] T031 [US4] Extend on-chain verifier to handle partial disclosure (reconstruct B from disclosed subset) in onchain/lib/bbs/verify.ak
+- [x] T032 [US4] Write conformance tests for selective disclosure against IETF proof fixtures in offchain/test/Conformance/SelectiveDisclosureSpec.hs
+- [x] T033 [US4] Write Aiken test: partial disclosure proof accepted, disclosed values match in onchain/validators/bbs_credential.ak
 
 **Checkpoint**: Selective disclosure works both off-chain and on-chain. IETF fixtures pass.
 
