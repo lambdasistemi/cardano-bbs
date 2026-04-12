@@ -1,6 +1,6 @@
 # Budget Report
 
-Date: 2026-04-11
+Date: 2026-04-12
 
 ## Method
 
@@ -20,28 +20,28 @@ Current verifier assumptions:
 
 | Attributes | Disclosed | Memory ExUnits | CPU ExUnits | Status vs 10B CPU budget |
 | --- | ---: | ---: | ---: | --- |
-| 1 | 1 | 2,170,013 | 2,960,660,254 | Pass |
-| 5 | 2 | 7,066,478 | 6,148,817,710 | Pass |
-| 10 | 4 | 17,326,044 | 12,595,622,057 | Fail |
+| 1 | 1 | 1,826,482 | 2,805,715,072 | Pass |
+| 5 | 2 | 3,613,325 | 4,311,717,538 | Pass |
+| 10 | 4 | 6,093,611 | 6,268,412,930 | Pass |
 
 ## Interpretation
 
-- The current verifier is acceptable for small and medium credentials.
-- The current verifier exceeds the 10B CPU transaction budget at 10 attributes.
-- This means FR-007 and SC-006 are not currently satisfied.
+- The current verifier now fits within the 10B CPU transaction budget for the measured 1, 5, and 10 attribute cases.
+- This satisfies the current FR-007 and SC-006 budget target for the no-header proof flow.
 - Compared to the previous measured version, CPU improved by roughly:
-  - 16.0% at 1 attribute
-  - 14.2% at 5 attributes
-  - 11.1% at 10 attributes
+  - 5.2% at 1 attribute
+  - 29.9% at 5 attributes
+  - 50.2% at 10 attributes
+- The main win came from generating the BBS message generator list once per proof verification instead of rebuilding it repeatedly during transcript reconstruction.
 
 ## Likely Cost Drivers
 
-- repeated G1 decompression / compression during transcript reconstruction
-- per-message scalar multiplication as attribute count grows
+- transcript reconstruction and per-message scalar multiplication as attribute count grows
+- generator derivation if it is recomputed inside inner verifier loops
 - the final pairing check on top of transcript work
 
 ## Immediate Follow-Up
 
-1. Reduce point decompression / recompression churn inside [verify.ak](/code/cardano-bbs-verify/onchain/lib/bbs/verify.ak).
-2. Re-measure after any verifier refactor before extending selective disclosure further.
-3. Keep signed-header support blocked behind another measurement pass, because the 10-attribute case already fails.
+1. Re-measure after adding signed-header support, because the current measurements still assume `header = ""`.
+2. Add the round-trip integration test in [RoundTripSpec.hs](/code/cardano-bbs-verify/offchain/test/Integration/RoundTripSpec.hs) once Cardano-side integration policy allows it.
+3. Re-run the budget suite when selective disclosure logic changes, because partial-disclosure handling can still shift verifier cost.

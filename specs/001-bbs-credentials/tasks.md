@@ -86,11 +86,11 @@
 
 ### Implementation for User Story 3
 
-- [ ] T024 [US3] Implement generator point computation in onchain/lib/bbs/generators.ak
-- [ ] T025 [US3] Implement BBS+ proof verification (pairing check, challenge recomputation) in onchain/lib/bbs/verify.ak
-- [ ] T026 [US3] Implement BBS+ credential validator (reads regulator_pk from reference input) in onchain/validators/bbs_credential.ak
+- [x] T024 [US3] Implement generator point computation in onchain/lib/bbs/generators.ak
+- [x] T025 [US3] Implement BBS+ proof verification (pairing check, challenge recomputation) in onchain/lib/bbs/verify.ak
+- [x] T026 [US3] Implement BBS+ credential validator (reads regulator_pk from reference input) in onchain/validators/bbs_credential.ak
 - [ ] T027 [US3] Write Aiken unit tests: valid proof accepted, invalid proof rejected in onchain/test/bbs_verify_test.ak
-- [ ] T028 [US3] Measure and document CPU/memory ExUnit costs for 1, 5, 10 attributes in specs/001-bbs-credentials/budget-report.md
+- [x] T028 [US3] Measure and document CPU/memory ExUnit costs for 1, 5, 10 attributes in specs/001-bbs-credentials/budget-report.md
 - [ ] T029 [US3] Write round-trip integration test: off-chain issue+prove → serialize → on-chain verify in offchain/test/Integration/RoundTripSpec.hs
 
 **Checkpoint**: End-to-end flow works. Budget fits. Round-trip test passes.
