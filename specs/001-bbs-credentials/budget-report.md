@@ -43,5 +43,5 @@ Current verifier assumptions:
 ## Immediate Follow-Up
 
 1. Re-measure after adding signed-header support, because the current measurements still assume `header = ""`.
-2. Add the round-trip integration test in [RoundTripSpec.hs](/code/cardano-bbs-verify/offchain/test/Integration/RoundTripSpec.hs) once Cardano-side integration policy allows it.
-3. Re-run the budget suite when selective disclosure logic changes, because partial-disclosure handling can still shift verifier cost.
+2. Re-run the budget suite when selective disclosure logic changes, because partial-disclosure handling can still shift verifier cost.
+3. Keep the [RoundTripSpec.hs](/code/cardano-bbs-verify/offchain/test/Integration/RoundTripSpec.hs) integration fixture aligned with any future signed-header or redeemer-shape changes.

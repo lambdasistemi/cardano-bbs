@@ -2,13 +2,14 @@
 
 ## Current Test Coverage
 
-The current off-chain coverage focuses on correctness against imported fixtures and minimal API round-trips.
+The current coverage now spans imported cryptographic fixtures, off-chain API checks, and a real off-chain to on-chain round-trip.
 
 ### Unit tests
 
 - issue a credential and verify it
 - reject a tampered attribute set
 - derive a selective disclosure proof and verify it
+- generate a proof off-chain, serialize it, and have a temporary Aiken project accept it through the real validator path
 
 ### Conformance tests
 
@@ -32,4 +33,4 @@ just test-offchain
 
 ## Current Gap
 
-There are no Aiken tests yet for the validators, because the validator logic is still scaffold-level.
+Validator coverage is still mostly embedded inside [verify.ak](/code/cardano-bbs-verify/onchain/lib/bbs/verify.ak) and [bbs_credential.ak](/code/cardano-bbs-verify/onchain/validators/bbs_credential.ak). The next cleanup step is to move that coverage into dedicated `onchain/test/` modules.
