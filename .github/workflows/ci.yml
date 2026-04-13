@@ -16,7 +16,9 @@ jobs:
     runs-on: nixos
     steps:
       - uses: actions/checkout@v4
-      - name: Run Scaffold Verification
+      - name: Warm Nix Dev Shell
+        run: nix build --print-build-logs .#devShells.x86_64-linux.default.inputDerivation
+      - name: Run Repository Gate
         run: nix develop --quiet -c just ci
 
   lean:
