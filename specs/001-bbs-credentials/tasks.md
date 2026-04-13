@@ -89,15 +89,16 @@
 - [x] T024 [US3] Implement generator point computation in onchain/lib/bbs/generators.ak
 - [x] T025 [US3] Implement BBS+ proof verification (pairing check, challenge recomputation) in onchain/lib/bbs/verify.ak
 - [x] T026 [US3] Implement BBS+ credential validator (reads regulator_pk from reference input) in onchain/validators/bbs_credential.ak
-- [ ] T027 [US3] Write Aiken unit tests: valid proof accepted, invalid proof rejected in onchain/test/bbs_verify_test.ak
+- [ ] T027 [US3] Move validator-focused Aiken tests into dedicated `onchain/test/` modules once the toolchain supports that layout reliably
 - [x] T028 [US3] Measure and document CPU/memory ExUnit costs for 1, 5, 10 attributes in specs/001-bbs-credentials/budget-report.md
 - [x] T029 [US3] Write round-trip integration test: off-chain issue+prove → serialize registry/redeemer → on-chain verify in offchain/test/Integration/RoundTripSpec.hs
 - [x] T029a [US3] Carry signed-header bytes through RegulatorRegistry serialization and on-chain domain calculation in offchain/src/Cardano/BBS/Serialize.hs and onchain/lib/bbs/verify.ak
-- [ ] T029b [US3] Bootstrap `cardano-node-clients` dependency graph for offchain transaction work in offchain/cabal.project and flake.nix
-- [ ] T029c [US3] Add `TxBuild` bridge helpers for typed redeemer/datum assembly in offchain/src/Cardano/BBS/TxBuild.hs
-- [ ] T029d [US3] Write a `cardano-node-clients` assembly test for BBS redeemer/datum shapes in offchain/test/Unit/TxBuildSpec.hs
+- [x] T029b [US3] Bootstrap `cardano-node-clients` dependency graph for offchain transaction work in offchain/cabal.project and flake.nix
+- [x] T029c [US3] Add `TxBuild` bridge helpers for typed redeemer/datum assembly in offchain/src/Cardano/BBS/TxBuild.hs
+- [x] T029d [US3] Write a `cardano-node-clients` assembly test for BBS redeemer/datum shapes in offchain/test/Unit/TxBuildSpec.hs
+- [x] T029e [US3] Submit a real BBS validator spend on the local `cardano-node-clients` devnet in offchain/test/Integration/TxSubmitSpec.hs
 
-**Checkpoint**: End-to-end flow works. Budget fits. Round-trip test passes.
+**Checkpoint**: End-to-end flow works through local devnet submission. Budget fits. Round-trip test passes.
 
 ---
 
@@ -214,7 +215,8 @@ Foundational
 5. Complete Phase 5: US3 — on-chain verification works
 6. **STOP and VALIDATE**: End-to-end round-trip on validator path
 7. Bootstrap `cardano-node-clients` and validate typed transaction assembly
-8. Add real transaction-building and submission through `cardano-node-clients`
+8. Add real transaction-building and local devnet submission through `cardano-node-clients`
+9. Extend the same flow to a public Cardano testnet
 
 ### Incremental Delivery
 

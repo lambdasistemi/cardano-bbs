@@ -2,7 +2,7 @@
 
 ## Current Test Coverage
 
-The current coverage spans imported cryptographic fixtures, off-chain API checks, and a real off-chain to on-chain round-trip. The next branch also adds a `cardano-node-clients` assembly test once the dependency bootstrap finishes.
+The current coverage spans imported cryptographic fixtures, off-chain API checks, a real off-chain to on-chain round-trip, and a local devnet submitted-transaction integration test through `cardano-node-clients`.
 
 ### Unit tests
 
@@ -11,6 +11,7 @@ The current coverage spans imported cryptographic fixtures, off-chain API checks
 - derive a selective disclosure proof and verify it
 - generate a proof off-chain, serialize it, and have a temporary Aiken project accept it through the real validator path
 - round-trip a non-empty signed header through issuance, proof derivation, registry serialization, and on-chain verification
+- build and submit a real validator spend on the local `cardano-node-clients` devnet
 
 ### Conformance tests
 
@@ -35,8 +36,6 @@ just test-offchain
 
 ## Current Gap
 
-Validator coverage is still mostly embedded inside [verify.ak](/code/cardano-bbs-verify/onchain/lib/bbs/verify.ak) and [bbs_credential.ak](/code/cardano-bbs-verify/onchain/validators/bbs_credential.ak). The current Aiken toolchain does not exercise standalone `onchain/test/` modules in this repo, so active validator tests live with the validator code for now.
+Validator coverage is still split between embedded Aiken tests in [bbs_credential.ak](/code/cardano-bbs-verify/onchain/validators/bbs_credential.ak) and generated acceptance coverage from [RoundTripSpec.hs](/code/cardano-bbs-verify/offchain/test/Integration/RoundTripSpec.hs). The current Aiken toolchain does not exercise standalone `onchain/test/` modules in this repo, so active validator tests still live with the validator code for now.
 
-There is still no submitted-transaction integration test through `cardano-node-clients`; the current round-trip stops at local validator execution.
-
-There is active bootstrap work for a typed `TxBuild` assembly test, but it is not merged yet and should not be treated as available on `main`.
+The local submitted-transaction path is now covered by [TxSubmitSpec.hs](/code/cardano-bbs-verify/offchain/test/Integration/TxSubmitSpec.hs). What is still missing is a public Cardano testnet run rather than the local `cardano-node-clients` devnet.

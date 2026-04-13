@@ -15,7 +15,7 @@ What exists today:
 - BBS proof validation on-chain, including:
   - regulator/public proof byte-size checks
   - disclosure-count and disclosure-index validation
-  - transaction-bound nonce checking against `self.id`
+  - transaction-context nonce checking against the consumed script `OutputReference`
   - Fiat-Shamir transcript recomputation for both empty and non-empty signed-header flows:
     - message-to-scalar hashing
     - domain derivation
@@ -23,15 +23,16 @@ What exists today:
   - the core BBS pairing equation:
     - `e(Abar, W) == e(Bbar, BP2)`
 - Aiken tests covering verifier acceptance and rejection paths
+- a local `cardano-node-clients` submitted-transaction slice exercising the validator against a real devnet node
 
 What does not exist yet:
 
-- a `cardano-node-clients` transaction-building slice exercising the validator against a real submitted transaction
+- a public Cardano testnet submission flow beyond the local `cardano-node-clients` devnet
 - the separate BLS aggregation track
 
 ## Why This Matters
 
-The off-chain library can already generate valid BBS+ signatures and proofs, serialize them into the Aiken-facing redeemer and datum layout, and carry the credential signed header into the on-chain domain calculation. The current on-chain verifier is no longer a structural stub: it recomputes the transcript challenge, checks the core pairing equation, and stays within the 10B CPU transaction ceiling for the measured 1, 5, and 10 attribute cases.
+The off-chain library can already generate valid BBS+ signatures and proofs, serialize them into the Aiken-facing redeemer and datum layout, carry the credential signed header into the on-chain domain calculation, and submit a real validator spend on a local devnet through `cardano-node-clients`. The current on-chain verifier is no longer a structural stub: it recomputes the transcript challenge, checks the core pairing equation, and stays within the 10B CPU transaction ceiling for the measured 1, 5, and 10 attribute cases.
 
 ## Current Budget Signal
 
@@ -48,8 +49,8 @@ The important result is that the verifier remains under the 10B CPU transaction 
 The next serious on-chain tasks are:
 
 1. re-measure the verifier with non-empty signed headers in [budget.ak](/code/cardano-bbs-verify/onchain/lib/bbs/budget.ak)
-2. finish the off-chain `cardano-node-clients` bootstrap and typed `TxBuild` assembly bridge
-3. build the first real submitted-transaction slice through `cardano-node-clients`
-4. split the current embedded Aiken tests into a cleaner structure once the toolchain supports dedicated test modules reliably
+2. extend the local devnet transaction slice into a public Cardano testnet run
+3. split the current embedded Aiken tests into a cleaner structure once the toolchain supports dedicated test modules reliably
+4. build the separate BLS aggregation track
 
 Until those are done, any documentation describing the Cardano integration story as fully complete would be false.

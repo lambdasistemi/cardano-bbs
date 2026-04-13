@@ -124,12 +124,12 @@ regulatorRegistryToCBOR
 
 The module also exposes a minimal Plutus `Data` encoder/decoder so the off-chain contract can be tested without needing the full Plutus ledger API in this package.
 
-`Cardano.BBS.TxBuild` is the next integration layer. It turns the serializer output into typed raw Plutus data values that can be consumed directly by `cardano-node-clients` `TxBuild` programs.
+`Cardano.BBS.TxBuild` is the Cardano integration layer. It turns the serializer output into typed raw Plutus data values that can be consumed directly by `cardano-node-clients` `TxBuild` programs.
 
 ## Caveats
 
 - `verifyCredential` and `verifyProof` currently return `False` on cryptographic failure rather than surfacing a rich error type.
 - The serializer currently targets the `BBSProof` and `RegulatorRegistry` data shapes only. It does not yet cover the separate BLS aggregation redeemer path.
 - `proofRedeemerToCBOR` requires the original attribute list and disclosure set because the raw proof bytes alone do not contain disclosed values or message-count context.
-- The API is usable for off-chain testing and redeemer construction today, but it is not yet the final end-to-end transaction integration API.
-- The `cardano-node-clients` bridge is being bootstrapped now, so transaction assembly is still in progress rather than fully shipped.
+- The API is usable for off-chain testing, redeemer construction, and the current local devnet submitted-transaction flow.
+- Public Cardano testnet submission is still pending; the shipped integration today is the local `cardano-node-clients` devnet path exercised by [TxSubmitSpec.hs](/code/cardano-bbs-verify/offchain/test/Integration/TxSubmitSpec.hs).

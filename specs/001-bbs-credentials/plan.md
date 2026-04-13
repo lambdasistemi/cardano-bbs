@@ -13,7 +13,7 @@ Implement BBS+ anonymous credentials for Cardano: a Haskell off-chain library fo
 **Primary Dependencies**: `zkryptium` v0.6.1 (Rust, BBS+ draft-10), Aiken stdlib BLS12-381 modules, `cardano-node-clients` for Cardano integration
 **Storage**: N/A — library, no persistent storage
 **Testing**: HSpec + QuickCheck (Haskell), Aiken test framework, conformance against IETF test vectors
-**Target Platform**: Linux x86_64 (off-chain), Cardano mainnet/testnet (on-chain)
+**Target Platform**: Linux x86_64 (off-chain), local `cardano-node-clients` devnet plus Cardano testnet/mainnet targets (on-chain)
 **Project Type**: Library (off-chain) + Smart contract (on-chain)
 **Performance Goals**: Proof derivation <1s, on-chain verification within Plutus V3 budget (~2-3B CPU ExUnits for 5 attributes)
 **Constraints**: 10B CPU tx budget, ~14KB tx size limit, BLS12-381 curve only
@@ -74,7 +74,7 @@ offchain/
 │   ├── Unit/
 │   ├── Property/
 │   ├── Conformance/                  -- IETF test vector runner
-│   └── Integration/                  -- round-trip with Aiken and Cardano tx builder
+│   └── Integration/                  -- round-trip with Aiken and local devnet tx submission
 ├── cbits/                            -- Rust FFI glue
 │   └── zkryptium-ffi/
 │       ├── Cargo.toml

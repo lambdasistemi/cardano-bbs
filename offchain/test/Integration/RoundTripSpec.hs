@@ -26,8 +26,12 @@ import Cardano.BBS.Serialize (
  )
 import Cardano.BBS.Verify (verifyProof)
 import Control.Exception (bracket)
+import Crypto.Hash (Blake2b_256, Digest, hash)
 import Data.ByteString (ByteString)
 import qualified Data.ByteString as BS
+import Data.ByteArray (convert)
+import qualified Data.ByteString.Builder as BB
+import qualified Data.ByteString.Lazy as LBS
 import Data.List (intercalate)
 import Numeric (showHex)
 import System.Directory (
@@ -63,7 +67,7 @@ spec =
           disclosed = [0, 2]
           disclosedAttrs = [Attribute "jurisdiction:EU", Attribute "status:active"]
           header = Just (Header "cardano-bbs-signed-header")
-          txId =
+          inputTxId =
             BS.pack
               [ 0x10
               , 0x11
@@ -98,7 +102,8 @@ spec =
               , 0x2E
               , 0x2F
               ]
-          ph = PresentationHeader txId
+          outputIndex = 0
+          ph = PresentationHeader (nonceFromOutputReference inputTxId outputIndex)
 
       credential <- issueCredential sk pk header attrs
       proof <- deriveProof pk credential header ph attrs disclosed
@@ -115,7 +120,7 @@ spec =
       withTempOnchainProject $ \onchainDir -> do
         appendFileUtf8
           (onchainDir </> "validators" </> "bbs_credential.ak")
-          (renderRoundTripTest registryDatum proofDatum txId)
+          (renderRoundTripTest registryDatum proofDatum inputTxId outputIndex)
         (exitCode, stdoutText, stderrText) <-
           readCreateProcessWithExitCode ((proc "aiken" ["check"]){cwd = Just onchainDir}) ""
         case exitCode of
@@ -183,18 +188,30 @@ renderRoundTripTest ::
   RegulatorRegistryDatum ->
   BBSProofDatum ->
   ByteString ->
+  Int ->
   String
-renderRoundTripTest registry proof txId =
+renderRoundTripTest registry proof inputTxId outputIndex =
   unlines
     [ ""
     , "test spend_accepts_offchain_roundtrip_proof() {"
     , "  let registry = " <> renderRegistry registry
-    , "  let self = Transaction { ..placeholder, id: " <> renderBytes txId <> " }"
+    , "  let self = Transaction { ..placeholder, id: " <> renderBytes inputTxId <> " }"
+    , "  let own_ref = OutputReference { transaction_id: " <> renderBytes inputTxId <> ", output_index: " <> show outputIndex <> " }"
     , "  let proof = " <> renderProof proof
     , ""
-    , "  bbs_credential.spend(Some(registry), proof, sample_output_reference(), self)"
+    , "  bbs_credential.spend(Some(registry), proof, own_ref, self)"
     , "}"
     ]
+
+nonceFromOutputReference :: ByteString -> Int -> ByteString
+nonceFromOutputReference txId outputIndex =
+  convert (hash payload :: Digest Blake2b_256)
+  where
+    payload =
+      BS.concat
+        [ txId
+        , LBS.toStrict . BB.toLazyByteString . BB.word32BE $ fromIntegral outputIndex
+        ]
 
 renderRegistry :: RegulatorRegistryDatum -> String
 renderRegistry registry =

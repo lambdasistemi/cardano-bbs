@@ -1,4 +1,5 @@
-use aiken/collection/list
+use aiken/crypto
+use aiken/primitive/bytearray
 use bbs/types.{BBSProof, G1Element, G2Element, RegulatorRegistry}
 use bbs/verify
 use cardano/script_context.{ScriptContext}
@@ -9,11 +10,11 @@ validator bbs_credential {
   spend(
     datum: Option<RegulatorRegistry>,
     redeemer: BBSProof,
-    _own_ref: OutputReference,
-    self: Transaction,
+    own_ref: OutputReference,
+    _self: Transaction,
   ) {
     when datum is {
-      Some(registry) -> verify.verify(registry, redeemer, self.id)
+      Some(registry) -> verify.verify(registry, redeemer, nonce_from_output_reference(own_ref))
       None -> False
     }
   }
@@ -23,35 +24,9 @@ validator bbs_credential {
   }
 }
 
-test spend_accepts_structurally_valid_tx_bound_proof() {
-  let registry = sample_registry()
-  let self = Transaction {
-    ..placeholder,
-    id: #"bed231d880675ed101ead304512e043ade9958dd0241ea70b4b3957fba941501",
-  }
-  let proof = sample_proof()
-
-  bbs_credential.spend(Some(registry), proof, sample_output_reference(), self)
-}
-
-test spend_accepts_partial_disclosure_proof() {
-  let registry = sample_registry()
-  let self = Transaction {
-    ..placeholder,
-    id: #"bed231d880675ed101ead304512e043ade9958dd0241ea70b4b3957fba941501",
-  }
-  let proof = sample_proof()
-
-  and {
-    proof.disclosed_indices == [0, 2, 4, 6],
-    proof.disclosed_values == [
-      #"9872ad089e452c7b6e283dfac2a80d58e8d0ff71cc4d5e310a1debdda4a45f02",
-      #"7372e9daa5ed31e6cd5c825eac1b855e84476a1d94932aa348e07b73",
-      #"496694774c5604ab1b2544eababcf0f53278ff50", #"d183ddc6e2665aa4e2f088af",
-    ],
-    list.length(proof.m_hat) == 6,
-    bbs_credential.spend(Some(registry), proof, sample_output_reference(), self),
-  }
+test nonce_hashes_output_reference_stably() {
+  nonce_from_output_reference(sample_output_reference())
+    == #"b54106044420049bb7ff5444a434b3847077b420c4b8ea4cf7ac6420fe840f0b"
 }
 
 test spend_rejects_wrong_transaction_nonce() {
@@ -59,7 +34,15 @@ test spend_rejects_wrong_transaction_nonce() {
   let self = Transaction { ..placeholder, id: #"00112233" }
   let proof = sample_proof()
 
-  !bbs_credential.spend(Some(registry), proof, sample_output_reference(), self)
+  !bbs_credential.spend(
+    Some(registry),
+    proof,
+    OutputReference {
+      transaction_id: #"fe00000000000000000000000000000000000000000000000000000000000000",
+      output_index: 0,
+    },
+    self,
+  )
 }
 
 test spend_rejects_missing_datum() {
@@ -70,6 +53,15 @@ test spend_rejects_missing_datum() {
   let proof = sample_proof()
 
   !bbs_credential.spend(None, proof, sample_output_reference(), self)
+}
+
+fn nonce_from_output_reference(output_ref: OutputReference) -> ByteArray {
+  crypto.blake2b_256(
+    bytearray.concat(
+      output_ref.transaction_id,
+      bytearray.from_int_big_endian(output_ref.output_index, 4),
+    ),
+  )
 }
 
 fn sample_registry() -> RegulatorRegistry {
@@ -114,7 +106,7 @@ fn sample_proof() -> BBSProof {
       #"7372e9daa5ed31e6cd5c825eac1b855e84476a1d94932aa348e07b73",
       #"496694774c5604ab1b2544eababcf0f53278ff50", #"d183ddc6e2665aa4e2f088af",
     ],
-    nonce: #"bed231d880675ed101ead304512e043ade9958dd0241ea70b4b3957fba941501",
+    nonce: #"b54106044420049bb7ff5444a434b3847077b420c4b8ea4cf7ac6420fe840f0b",
   }
 }
 
