@@ -33,6 +33,8 @@
             fourmolu
             hlint
             pkg-config
+            curl
+            cacert
             libsodium-vrf
             secp256k1
             blst
@@ -53,6 +55,7 @@
             ];
 
           shellHook = ''
+            export SSL_CERT_FILE="${pkgs.cacert}/etc/ssl/certs/ca-bundle.crt"
             export LD_LIBRARY_PATH="${pkgs.libsodium-vrf}/lib:${pkgs.secp256k1}/lib:${pkgs.blst}/lib:${pkgs.zlib}/lib''${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}"
             echo "cardano-bbs dev shell"
             echo "  ghc:    $(ghc --version)"
