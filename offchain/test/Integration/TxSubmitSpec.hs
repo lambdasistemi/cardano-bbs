@@ -32,7 +32,7 @@ import Cardano.Ledger.Alonzo.Scripts (
   mkPlutusScript,
  )
 import Cardano.Ledger.Api.Scripts.Data (Datum (NoDatum))
-import Cardano.Ledger.Api.Tx (Tx, txIdTx)
+import Cardano.Ledger.Api.Tx (Tx)
 import Cardano.Ledger.Api.Tx.Out (
   TxOut,
   coinTxOutL,
@@ -41,6 +41,7 @@ import Cardano.Ledger.Api.Tx.Out (
 import Cardano.Ledger.BaseTypes (
   Inject (inject),
   Network (Testnet),
+  TxIx (TxIx),
  )
 import Cardano.Ledger.Coin (Coin (..))
 import Cardano.Ledger.Conway (ConwayEra)
@@ -59,7 +60,7 @@ import Cardano.Ledger.Plutus.Language (
   Plutus (..),
   PlutusBinary (..),
  )
-import Cardano.Ledger.TxIn (TxIn)
+import Cardano.Ledger.TxIn (TxIn (..))
 import Cardano.Ledger.Api.Tx.In (TxId (..))
 import Cardano.Node.Client.E2E.Setup (
   addKeyWitness,
@@ -97,12 +98,16 @@ import Data.Aeson (
  )
 import Data.ByteString (ByteString)
 import qualified Data.ByteString as BS
+import qualified Data.ByteString.Builder as BB
+import qualified Data.ByteString.Lazy as LBS
+import Data.ByteArray (convert)
 import qualified Data.ByteString.Short as SBS
 import Data.List (find)
 import qualified Data.Map.Strict as Map
 import Data.Text (Text)
 import qualified Data.Text as T
-import Data.Word (Word8)
+import Data.Word (Word16, Word8)
+import Crypto.Hash (Blake2b_256, Digest, hash)
 import Lens.Micro ((^.))
 import System.Environment (lookupEnv, setEnv, unsetEnv)
 import Test.Hspec
@@ -200,7 +205,7 @@ submitBbsSpend (provider, submitter, pp, utxos) = do
     waitForMatchingUtxo provider genesisAddr 30 (hasCoin collateralCoin)
 
   spendTx <-
-    buildFixedPointSpend
+    buildSpend
       provider
       pp
       validator
@@ -239,7 +244,7 @@ fundingProgram seedIn scriptAddr scriptCoin paymentCoin collateralCoin registry 
   _ <- payTo genesisAddr (inject collateralCoin)
   pure ()
 
-buildFixedPointSpend ::
+buildSpend ::
   Provider IO ->
   PParams ConwayEra ->
   Script ConwayEra ->
@@ -254,32 +259,19 @@ buildFixedPointSpend ::
   (TxIn, TxOut ConwayEra) ->
   (TxIn, TxOut ConwayEra) ->
   IO (Tx ConwayEra)
-buildFixedPointSpend provider pp validator pk credential header attrs disclosed recipient spendCoin paymentUtxo collateralUtxo scriptUtxo = do
-  tx0 <- buildForNonce zeroNonce
-  let nonce1 = txIdBytes (txIdTx tx0)
-  tx1 <- buildForNonce nonce1
-  let nonce2 = txIdBytes (txIdTx tx1)
-  if nonce2 == nonce1
-    then pure tx1
-    else do
-      tx2 <- buildForNonce nonce2
-      txIdBytes (txIdTx tx2) `shouldBe` nonce2
-      pure tx2
-  where
-    zeroNonce = BS.replicate 32 0
-    buildForNonce nonce = do
-      let ph = PresentationHeader nonce
-      proof <- deriveProof pk credential header ph attrs disclosed
-      redeemer <- expectRight "proofRedeemerRawPlutusData" $
-        proofRedeemerRawPlutusData proof ph attrs disclosed
-      expectRightShow "script spend build" =<<
-        build
-          pp
-          noCtxInterpretIO
-          (\tx -> fmap (Map.map (either (Left . show) Right)) (evaluateTx provider tx))
-          [paymentUtxo, collateralUtxo, scriptUtxo]
-          genesisAddr
-          (spendProgram validator (fst paymentUtxo) (fst collateralUtxo) (fst scriptUtxo) redeemer recipient spendCoin)
+buildSpend provider pp validator pk credential header attrs disclosed recipient spendCoin paymentUtxo collateralUtxo scriptUtxo = do
+  let ph = PresentationHeader (nonceFromTxIn (fst scriptUtxo))
+  proof <- deriveProof pk credential header ph attrs disclosed
+  redeemer <- expectRight "proofRedeemerRawPlutusData" $
+    proofRedeemerRawPlutusData proof ph attrs disclosed
+  expectRightShow "script spend build" =<<
+    build
+      pp
+      noCtxInterpretIO
+      (\tx -> fmap (Map.map (either (Left . show) Right)) (evaluateTx provider tx))
+      [paymentUtxo, collateralUtxo, scriptUtxo]
+      genesisAddr
+      (spendProgram validator (fst paymentUtxo) (fst collateralUtxo) (fst scriptUtxo) redeemer recipient spendCoin)
 
 spendProgram ::
   Script ConwayEra ->
@@ -344,6 +336,22 @@ validatorAddr script =
 txIdBytes :: TxId -> ByteString
 txIdBytes (TxId safeHash) =
   hashToBytes (extractHash safeHash)
+
+nonceFromTxIn :: TxIn -> ByteString
+nonceFromTxIn (TxIn txId (TxIx txIx)) =
+  convert (hash payload :: Digest Blake2b_256)
+  where
+    payload =
+      BS.concat
+        [ txIdBytes txId
+        , toWord32BE txIx
+        ]
+
+toWord32BE :: Word16 -> ByteString
+toWord32BE value =
+  LBS.toStrict $
+    BB.toLazyByteString $
+      BB.word32BE (fromIntegral value)
 
 data Blueprint = Blueprint
   { validators :: [ValidatorEntry]

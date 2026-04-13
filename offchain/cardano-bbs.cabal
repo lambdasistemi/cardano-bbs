@@ -66,8 +66,10 @@ test-suite unit-tests
     , cardano-node-clients
     , cardano-node-clients:devnet
     , containers
+    , cryptonite
     , directory
     , filepath
+    , memory
     , microlens
     , plutus-core
     , plutus-tx

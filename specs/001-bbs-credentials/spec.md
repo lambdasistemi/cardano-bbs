@@ -108,7 +108,7 @@ Multiple independent oracles each sign the same message (e.g., a Merkle root upd
 - What happens when a credential contains zero attributes? — Proof should still verify (empty disclosure set).
 - What happens when all attributes are disclosed? — Degenerates to a standard signature verification; unlinkability is lost (by design, since everything is revealed).
 - What happens when the on-chain proof verification exceeds script budgets? — The transaction fails. The system must report budget usage clearly so credential size (number of attributes) can be tuned.
-- What happens when a proof is replayed in a different transaction? — The validator must include transaction-specific context (e.g., a nonce or datum hash) in the verification to prevent replay.
+- What happens when a proof is replayed in a different transaction? — The validator must bind the proof nonce to stable transaction context known before balancing (e.g., the consumed script input reference or evolving datum state) so replay fails without creating a self-referential transaction ID loop.
 - What happens when oracles sign different messages? — Signatures over different messages cannot be aggregated meaningfully; the aggregate verification fails. The system must not silently accept mismatched aggregates.
 - What happens when end-to-end Cardano integration is needed? — Transaction-building must use `cardano-node-clients`; the feature must not introduce `cardano-api` as a workaround.
 
