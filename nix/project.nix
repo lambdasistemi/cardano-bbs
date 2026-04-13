@@ -1,4 +1,4 @@
-{ pkgs, CHaP, aikenPkg ? null, indexState, repoRoot }:
+{ pkgs, CHaP, aikenPkg ? null, cardanoNodePkg ? null, indexState, repoRoot }:
 
 let
   indexTool = { index-state = indexState; };
@@ -31,7 +31,9 @@ let
       pkgs.cargo
       pkgs.rustc
       pkgs.rustfmt
-    ] ++ pkgs.lib.optionals (aikenPkg != null) [ aikenPkg ];
+    ]
+    ++ pkgs.lib.optionals (aikenPkg != null) [ aikenPkg ]
+    ++ pkgs.lib.optionals (cardanoNodePkg != null) [ cardanoNodePkg ];
     shellHook = ''
       export SSL_CERT_FILE=${pkgs.cacert}/etc/ssl/certs/ca-bundle.crt
       echo "cardano-bbs dev shell"
