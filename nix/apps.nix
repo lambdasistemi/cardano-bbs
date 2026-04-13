@@ -1,4 +1,4 @@
-{ pkgs, checks, repoRoot, aikenPkg ? null }:
+{ pkgs, checks, repoRoot, aikenPkg ? null, cardanoNodePkg ? null }:
 let
   mkRepoApp = name: runtimeInputs: text:
     {
@@ -10,8 +10,12 @@ let
     };
 in
 {
-  offchain-tests = mkRepoApp "offchain-tests-app" (pkgs.lib.optionals (aikenPkg != null) [ aikenPkg ]) ''
+  offchain-tests = mkRepoApp "offchain-tests-app" (
+    (pkgs.lib.optionals (aikenPkg != null) [ aikenPkg ])
+    ++ (pkgs.lib.optionals (cardanoNodePkg != null) [ cardanoNodePkg ])
+  ) ''
     repo_path="''${CARDANO_BBS_REPO_ROOT:-$PWD}"
+    export E2E_GENESIS_DIR="/code/cardano-node-clients/e2e-test/genesis"
     cd "$repo_path/offchain"
     exec ${checks.offchain-tests}/bin/unit-tests "$@"
   '';

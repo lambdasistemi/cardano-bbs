@@ -42,6 +42,7 @@ test-suite unit-tests
   other-modules:
     Conformance.SelectiveDisclosureSpec
     Integration.RoundTripSpec
+    Integration.TxSubmitSpec
     Unit.CredentialSpec
     Unit.SerializeSpec
     Unit.TxBuildSpec
@@ -63,6 +64,7 @@ test-suite unit-tests
     , cardano-ledger-core
     , cardano-ledger-mary
     , cardano-node-clients
+    , cardano-node-clients:devnet
     , containers
     , directory
     , filepath
@@ -70,6 +72,7 @@ test-suite unit-tests
     , plutus-core
     , plutus-tx
     , process
+    , text
 
 executable budget-cases
   hs-source-dirs:  app

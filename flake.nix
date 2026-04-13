@@ -23,9 +23,12 @@
         "github:intersectmbo/cardano-haskell-packages/a46182e9c039737bf43cdb5286df49bbe0edf6fb";
       flake = false;
     };
+    cardano-node = {
+      url = "github:IntersectMBO/cardano-node/10.5.4";
+    };
   };
 
-  outputs = { self, nixpkgs, flake-utils, aiken, iohkNix, haskellNix, CHaP }:
+  outputs = { self, nixpkgs, flake-utils, aiken, iohkNix, haskellNix, CHaP, cardano-node }:
     flake-utils.lib.eachDefaultSystem (system:
       let
         pkgs = import nixpkgs {
@@ -44,8 +47,9 @@
         repoRoot = ./.;
         indexState = "2025-12-07T00:00:00Z";
         aikenPkg = aiken.packages.${system}.aiken or null;
+        cardanoNodePkg = cardano-node.packages.${system}.cardano-node or null;
         project = import ./nix/project.nix {
-          inherit pkgs CHaP aikenPkg indexState repoRoot;
+          inherit pkgs CHaP aikenPkg cardanoNodePkg indexState repoRoot;
         };
         checks = import ./nix/checks.nix {
           inherit pkgs repoRoot project aikenPkg;
@@ -60,7 +64,7 @@
         inherit checks;
 
         apps = import ./nix/apps.nix {
-          inherit pkgs checks repoRoot aikenPkg;
+          inherit pkgs checks repoRoot aikenPkg cardanoNodePkg;
         };
 
         inherit (project) devShells;
