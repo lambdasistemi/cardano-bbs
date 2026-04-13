@@ -5,6 +5,7 @@ let
       type = "app";
       program = pkgs.lib.getExe (pkgs.writeShellApplication {
         inherit name runtimeInputs text;
+        excludeShellChecks = [ "SC2046" ];
       });
     };
 in
