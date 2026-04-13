@@ -23,8 +23,6 @@ import Cardano.BBS.TxBuild (
   proofRedeemerRawPlutusData,
   regulatorRegistryRawPlutusData,
  )
-import Control.Concurrent (threadDelay)
-import Control.Exception (bracket_)
 import Cardano.Crypto.Hash (hashToBytes)
 import Cardano.Ledger.Address (Addr (..))
 import Cardano.Ledger.Alonzo.Scripts (
@@ -33,6 +31,7 @@ import Cardano.Ledger.Alonzo.Scripts (
  )
 import Cardano.Ledger.Api.Scripts.Data (Datum (NoDatum))
 import Cardano.Ledger.Api.Tx (Tx)
+import Cardano.Ledger.Api.Tx.In (TxId (..))
 import Cardano.Ledger.Api.Tx.Out (
   TxOut,
   coinTxOutL,
@@ -61,7 +60,6 @@ import Cardano.Ledger.Plutus.Language (
   PlutusBinary (..),
  )
 import Cardano.Ledger.TxIn (TxIn (..))
-import Cardano.Ledger.Api.Tx.In (TxId (..))
 import Cardano.Node.Client.E2E.Setup (
   addKeyWitness,
   enterpriseAddr,
@@ -89,6 +87,9 @@ import Cardano.Node.Client.TxBuild (
   spend,
   spendScript,
  )
+import Control.Concurrent (threadDelay)
+import Control.Exception (bracket_)
+import Crypto.Hash (Blake2b_256, Digest, hash)
 import Data.Aeson (
   FromJSON (..),
   eitherDecodeFileStrict',
@@ -96,18 +97,17 @@ import Data.Aeson (
   (.:),
   (.:?),
  )
+import Data.ByteArray (convert)
 import Data.ByteString (ByteString)
 import qualified Data.ByteString as BS
 import qualified Data.ByteString.Builder as BB
 import qualified Data.ByteString.Lazy as LBS
-import Data.ByteArray (convert)
 import qualified Data.ByteString.Short as SBS
 import Data.List (find)
 import qualified Data.Map.Strict as Map
 import Data.Text (Text)
 import qualified Data.Text as T
 import Data.Word (Word16, Word8)
-import Crypto.Hash (Blake2b_256, Digest, hash)
 import Lens.Micro ((^.))
 import System.Environment (lookupEnv, setEnv, unsetEnv)
 import Test.Hspec
@@ -184,8 +184,8 @@ submitBbsSpend (provider, submitter, pp, utxos) = do
   credential <- issueCredential sk pk header attrs
 
   fundingTx <-
-    expectRightShow "funding build" =<<
-      build
+    expectRightShow "funding build"
+      =<< build
         pp
         noCtxInterpretIO
         mockEval
@@ -262,16 +262,25 @@ buildSpend ::
 buildSpend provider pp validator pk credential header attrs disclosed recipient spendCoin paymentUtxo collateralUtxo scriptUtxo = do
   let ph = PresentationHeader (nonceFromTxIn (fst scriptUtxo))
   proof <- deriveProof pk credential header ph attrs disclosed
-  redeemer <- expectRight "proofRedeemerRawPlutusData" $
-    proofRedeemerRawPlutusData proof ph attrs disclosed
-  expectRightShow "script spend build" =<<
-    build
+  redeemer <-
+    expectRight "proofRedeemerRawPlutusData" $
+      proofRedeemerRawPlutusData proof ph attrs disclosed
+  expectRightShow "script spend build"
+    =<< build
       pp
       noCtxInterpretIO
       (\tx -> fmap (Map.map (either (Left . show) Right)) (evaluateTx provider tx))
       [paymentUtxo, collateralUtxo, scriptUtxo]
       genesisAddr
-      (spendProgram validator (fst paymentUtxo) (fst collateralUtxo) (fst scriptUtxo) redeemer recipient spendCoin)
+      ( spendProgram
+          validator
+          (fst paymentUtxo)
+          (fst collateralUtxo)
+          (fst scriptUtxo)
+          redeemer
+          recipient
+          spendCoin
+      )
 
 spendProgram ::
   Script ConwayEra ->
@@ -295,14 +304,13 @@ data Void = Void deriving (Show)
 
 noCtxInterpretIO :: InterpretIO NoCtx
 noCtxInterpretIO = InterpretIO $ \case
-  {}
 
 expectRight :: String -> Either String a -> IO a
 expectRight label = \case
   Right value -> pure value
   Left err -> expectationFailure (label <> ": " <> err) >> fail err
 
-expectRightShow :: Show e => String -> Either e a -> IO a
+expectRightShow :: (Show e) => String -> Either e a -> IO a
 expectRightShow label = \case
   Right value -> pure value
   Left err -> expectationFailure (label <> ": " <> show err) >> fail label
@@ -376,7 +384,8 @@ loadBbsValidator :: FilePath -> IO (Script ConwayEra)
 loadBbsValidator path = do
   blueprint <- either fail pure =<< (eitherDecodeFileStrict' path :: IO (Either String Blueprint))
   code <-
-    case find (T.isPrefixOf "bbs_credential.bbs_credential.spend" . title) (validators blueprint) >>= compiledCode of
+    case find (T.isPrefixOf "bbs_credential.bbs_credential.spend" . title) (validators blueprint)
+      >>= compiledCode of
       Just hexText ->
         case decodeHexShort hexText of
           Just bytes -> pure bytes

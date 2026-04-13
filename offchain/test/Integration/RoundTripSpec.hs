@@ -27,9 +27,9 @@ import Cardano.BBS.Serialize (
 import Cardano.BBS.Verify (verifyProof)
 import Control.Exception (bracket)
 import Crypto.Hash (Blake2b_256, Digest, hash)
+import Data.ByteArray (convert)
 import Data.ByteString (ByteString)
 import qualified Data.ByteString as BS
-import Data.ByteArray (convert)
 import qualified Data.ByteString.Builder as BB
 import qualified Data.ByteString.Lazy as LBS
 import Data.List (intercalate)
@@ -196,7 +196,11 @@ renderRoundTripTest registry proof inputTxId outputIndex =
     , "test spend_accepts_offchain_roundtrip_proof() {"
     , "  let registry = " <> renderRegistry registry
     , "  let self = Transaction { ..placeholder, id: " <> renderBytes inputTxId <> " }"
-    , "  let own_ref = OutputReference { transaction_id: " <> renderBytes inputTxId <> ", output_index: " <> show outputIndex <> " }"
+    , "  let own_ref = OutputReference { transaction_id: "
+        <> renderBytes inputTxId
+        <> ", output_index: "
+        <> show outputIndex
+        <> " }"
     , "  let proof = " <> renderProof proof
     , ""
     , "  bbs_credential.spend(Some(registry), proof, own_ref, self)"
