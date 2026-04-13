@@ -19,7 +19,8 @@ jobs:
       - name: Build Nix Checks
         run: >-
           nix build --print-build-logs
-          .#checks.x86_64-linux.offchain
+          .#checks.x86_64-linux.offchain-library
+          .#checks.x86_64-linux.offchain-tests
           .#checks.x86_64-linux.onchain
           .#checks.x86_64-linux.onchainBlueprint
 
@@ -29,8 +30,12 @@ jobs:
     needs: build-gate
     steps:
       - uses: actions/checkout@v4
-      - name: Run Offchain App
-        run: nix run .#offchain
+      - name: Run Offchain Tests
+        run: nix run .#offchain-tests
+      - name: Run Offchain Format Check
+        run: nix run .#offchain-format
+      - name: Run Offchain Lint
+        run: nix run .#offchain-lint
 
   onchain-gate:
     name: Onchain Gate
