@@ -50,6 +50,7 @@
             fourmolu
             hlint
             pkg-config
+            stdenv.cc
             curl
             cacert
             libsodium-vrf
