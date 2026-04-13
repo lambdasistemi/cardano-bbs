@@ -1,105 +1,68 @@
 {
   description = "BBS+ anonymous credentials for Cardano";
 
+  nixConfig = {
+    extra-substituters = [ "https://cache.iog.io" ];
+    extra-trusted-public-keys =
+      [ "hydra.iohk.io:f/Ea+s+dFdN+3Y/G+FDgSq+a5NEWhJGzdjvKNGv0/EQ=" ];
+  };
+
   inputs = {
-    nixpkgs.url = "github:NixOS/nixpkgs/nixpkgs-unstable";
+    haskellNix.url =
+      "github:input-output-hk/haskell.nix/baa6a549ce876e9c44c494a12116f178f1becbe6";
+    nixpkgs.follows = "haskellNix/nixpkgs-unstable";
     flake-utils.url = "github:numtide/flake-utils";
     aiken.url = "github:aiken-lang/aiken";
     iohkNix = {
-      url = "github:input-output-hk/iohk-nix";
+      url =
+        "github:input-output-hk/iohk-nix/0ce7cc21b9a4cfde41871ef486d01a8fafbf9627";
       inputs.nixpkgs.follows = "nixpkgs";
+    };
+    CHaP = {
+      url =
+        "github:intersectmbo/cardano-haskell-packages/a46182e9c039737bf43cdb5286df49bbe0edf6fb";
+      flake = false;
     };
   };
 
-  outputs = { self, nixpkgs, flake-utils, aiken, iohkNix }:
+  outputs = { self, nixpkgs, flake-utils, aiken, iohkNix, haskellNix, CHaP }:
     flake-utils.lib.eachDefaultSystem (system:
       let
         pkgs = import nixpkgs {
           inherit system;
           overlays = [
             iohkNix.overlays.crypto
+            haskellNix.overlay
+            iohkNix.overlays.haskell-nix-crypto
             iohkNix.overlays.cardano-lib
+            (final: prev: {
+              zkryptium_ffi = prev.callPackage ./nix/zkryptium-ffi.nix { };
+            })
           ];
         };
-        aikenPkg = aiken.packages.${system}.aiken or null;
+
         repoRoot = ./.;
-        ldLibraryPath = pkgs.lib.makeLibraryPath [
-          pkgs.libsodium-vrf
-          pkgs.secp256k1
-          pkgs.blst
-          pkgs.zlib
-        ];
-        pkgConfigPath = pkgs.lib.makeSearchPathOutput "dev" "lib/pkgconfig" [
-          pkgs.libsodium-vrf
-          pkgs.secp256k1
-          pkgs.blst
-          pkgs.lmdb
-          pkgs.zlib
-        ];
-        includePath = pkgs.lib.makeSearchPathOutput "dev" "include" [
-          pkgs.libsodium-vrf
-          pkgs.secp256k1
-          pkgs.blst
-          pkgs.lmdb
-          pkgs.zlib
-        ];
-        runtimeInputs = with pkgs;
-          [
-            haskell.compiler.ghc984
-            cabal-install
-            fourmolu
-            hlint
-            pkg-config
-            stdenv.cc
-            curl
-            cacert
-            libsodium-vrf
-            secp256k1
-            blst
-            lmdb
-            zlib
-            cargo
-            rustc
-            rustfmt
-            just
-          ]
-          ++ pkgs.lib.optionals (aikenPkg != null) [ aikenPkg ];
+        indexState = "2025-12-07T00:00:00Z";
+        aikenPkg = aiken.packages.${system}.aiken or null;
+        project = import ./nix/project.nix {
+          inherit pkgs CHaP aikenPkg indexState repoRoot;
+        };
         checks = import ./nix/checks.nix {
-          inherit pkgs repoRoot runtimeInputs ldLibraryPath pkgConfigPath
-            includePath;
+          inherit pkgs repoRoot project aikenPkg;
         };
       in
       {
-        packages = {
+        packages = project.packages // {
           onchain-blueprint = checks.onchainBlueprint;
-          budget-cases = checks.budgetCases;
-          default = checks.onchainBlueprint;
+          default = project.packages.offchain-library;
         };
 
         inherit checks;
 
         apps = import ./nix/apps.nix {
-          inherit pkgs checks;
+          inherit pkgs checks repoRoot aikenPkg;
         };
 
-        devShells.default = pkgs.mkShell {
-          buildInputs = runtimeInputs
-            ++ [
-              pkgs.haskell-language-server
-            ]
-            ++ pkgs.lib.optionals pkgs.stdenv.isDarwin [
-              pkgs.darwin.apple_sdk.frameworks.Security
-              pkgs.darwin.apple_sdk.frameworks.SystemConfiguration
-            ];
-
-          shellHook = ''
-            export SSL_CERT_FILE="${pkgs.cacert}/etc/ssl/certs/ca-bundle.crt"
-            export LD_LIBRARY_PATH="${ldLibraryPath}''${LD_LIBRARY_PATH:+:$LD_LIBRARY_PATH}"
-            echo "cardano-bbs dev shell"
-            echo "  ghc:    $(ghc --version)"
-            echo "  cabal:  $(cabal --version | head -1)"
-            echo "  cargo:  $(cargo --version)"
-          '';
-        };
+        inherit (project) devShells;
       });
 }
