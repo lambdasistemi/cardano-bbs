@@ -48,7 +48,8 @@ The important result is that the verifier remains under the 10B CPU transaction 
 The next serious on-chain tasks are:
 
 1. re-measure the verifier with non-empty signed headers in [budget.ak](/code/cardano-bbs-verify/onchain/lib/bbs/budget.ak)
-2. build the first real transaction-construction slice through `cardano-node-clients`
-3. split the current embedded Aiken tests into a cleaner structure once the toolchain supports dedicated test modules reliably
+2. finish the off-chain `cardano-node-clients` bootstrap and typed `TxBuild` assembly bridge
+3. build the first real submitted-transaction slice through `cardano-node-clients`
+4. split the current embedded Aiken tests into a cleaner structure once the toolchain supports dedicated test modules reliably
 
 Until those are done, any documentation describing the Cardano integration story as fully complete would be false.

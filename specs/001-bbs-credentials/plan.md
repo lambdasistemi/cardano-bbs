@@ -10,7 +10,7 @@ Implement BBS+ anonymous credentials for Cardano: a Haskell off-chain library fo
 ## Technical Context
 
 **Language/Version**: Haskell (GHC 9.6+) for off-chain, Aiken (latest) for on-chain, Rust (via FFI) for BBS+ core
-**Primary Dependencies**: `zkryptium` v0.6.1 (Rust, BBS+ draft-10), Aiken stdlib BLS12-381 modules, future Cardano integration via `cardano-node-clients` only
+**Primary Dependencies**: `zkryptium` v0.6.1 (Rust, BBS+ draft-10), Aiken stdlib BLS12-381 modules, `cardano-node-clients` for Cardano integration
 **Storage**: N/A — library, no persistent storage
 **Testing**: HSpec + QuickCheck (Haskell), Aiken test framework, conformance against IETF test vectors
 **Target Platform**: Linux x86_64 (off-chain), Cardano mainnet/testnet (on-chain)
@@ -57,6 +57,7 @@ specs/001-bbs-credentials/
 
 ```text
 offchain/
+├── cabal.project                     -- pinned Cardano dependency graph for tx builder work
 ├── cardano-bbs.cabal
 ├── src/
 │   ├── Cardano/BBS/KeyGen.hs         -- key pair generation
@@ -64,6 +65,7 @@ offchain/
 │   ├── Cardano/BBS/Proof.hs          -- proof derivation
 │   ├── Cardano/BBS/Verify.hs         -- off-chain verification
 │   ├── Cardano/BBS/Serialize.hs      -- CBOR encoding for Plutus
+│   ├── Cardano/BBS/TxBuild.hs        -- Plutus data bridge for cardano-node-clients
 │   ├── Cardano/BBS/FFI.hs            -- Rust FFI bindings to zkryptium
 │   └── Cardano/BLS/
 │       ├── Sign.hs                   -- BLS signing
@@ -72,7 +74,7 @@ offchain/
 │   ├── Unit/
 │   ├── Property/
 │   ├── Conformance/                  -- IETF test vector runner
-│   └── Integration/                  -- round-trip with Aiken
+│   └── Integration/                  -- round-trip with Aiken and Cardano tx builder
 ├── cbits/                            -- Rust FFI glue
 │   └── zkryptium-ffi/
 │       ├── Cargo.toml

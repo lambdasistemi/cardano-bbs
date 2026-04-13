@@ -13,6 +13,7 @@ library
     Cardano.BBS.KeyGen
     Cardano.BBS.Credential
     Cardano.BBS.Proof
+    Cardano.BBS.TxBuild
     Cardano.BBS.Verify
     Cardano.BBS.Serialize
     Cardano.BBS.FFI
@@ -27,6 +28,8 @@ library
     , binary     >= 0.8
     , text       >= 1.2
     , containers >= 0.6
+    , plutus-core
+    , plutus-tx
   extra-libraries:
     zkryptium_ffi
 
@@ -41,6 +44,7 @@ test-suite unit-tests
     Integration.RoundTripSpec
     Unit.CredentialSpec
     Unit.SerializeSpec
+    Unit.TxBuildSpec
     Conformance.SignatureSpec
     Conformance.ProofSpec
   build-depends:
@@ -52,9 +56,19 @@ test-suite unit-tests
     , hspec       >= 2.0
     , aeson
     , binary
+    , cardano-crypto-class
+    , cardano-ledger-alonzo
+    , cardano-ledger-api
+    , cardano-ledger-conway
+    , cardano-ledger-core
+    , cardano-ledger-mary
+    , cardano-node-clients
     , containers
     , directory
     , filepath
+    , microlens
+    , plutus-core
+    , plutus-tx
     , process
 
 executable budget-cases
