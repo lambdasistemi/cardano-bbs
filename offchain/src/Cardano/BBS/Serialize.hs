@@ -13,6 +13,8 @@ module Cardano.BBS.Serialize (
   publicKeyToCBOR,
   regulatorRegistryData,
   regulatorRegistryToCBOR,
+  bbsProofDatumToData,
+  regulatorRegistryDatumToData,
   encodePlutusData,
   decodePlutusData,
 ) where
@@ -60,7 +62,7 @@ import Control.Monad (replicateM)
 import Data.ByteString (ByteString)
 import qualified Data.ByteString as BS
 import qualified Data.ByteString.Lazy as LBS
-import Data.List (sort)
+import Data.List (foldl', sort)
 import qualified Data.Set as Set
 
 data PlutusData

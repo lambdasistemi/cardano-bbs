@@ -93,6 +93,9 @@
 - [x] T028 [US3] Measure and document CPU/memory ExUnit costs for 1, 5, 10 attributes in specs/001-bbs-credentials/budget-report.md
 - [x] T029 [US3] Write round-trip integration test: off-chain issue+prove → serialize registry/redeemer → on-chain verify in offchain/test/Integration/RoundTripSpec.hs
 - [x] T029a [US3] Carry signed-header bytes through RegulatorRegistry serialization and on-chain domain calculation in offchain/src/Cardano/BBS/Serialize.hs and onchain/lib/bbs/verify.ak
+- [ ] T029b [US3] Bootstrap `cardano-node-clients` dependency graph for offchain transaction work in offchain/cabal.project and flake.nix
+- [ ] T029c [US3] Add `TxBuild` bridge helpers for typed redeemer/datum assembly in offchain/src/Cardano/BBS/TxBuild.hs
+- [ ] T029d [US3] Write a `cardano-node-clients` assembly test for BBS redeemer/datum shapes in offchain/test/Unit/TxBuildSpec.hs
 
 **Checkpoint**: End-to-end flow works. Budget fits. Round-trip test passes.
 
@@ -210,7 +213,8 @@ Foundational
 4. Complete Phase 4: US2 — unlinkable proofs work
 5. Complete Phase 5: US3 — on-chain verification works
 6. **STOP and VALIDATE**: End-to-end round-trip on validator path
-7. Add real transaction-building and submission through `cardano-node-clients`
+7. Bootstrap `cardano-node-clients` and validate typed transaction assembly
+8. Add real transaction-building and submission through `cardano-node-clients`
 
 ### Incremental Delivery
 
