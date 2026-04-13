@@ -16,10 +16,22 @@ jobs:
     runs-on: nixos
     steps:
       - uses: actions/checkout@v4
-      - name: Warm Nix Dev Shell
-        run: nix build --print-build-logs .#devShells.x86_64-linux.default.inputDerivation
-      - name: Run Repository Gate
-        run: nix develop --quiet -c just ci
+      - name: Build Nix Checks
+        run: >-
+          nix build --print-build-logs
+          .#checks.x86_64-linux.offchain
+          .#checks.x86_64-linux.onchain
+          .#checks.x86_64-linux.ci
+          .#checks.x86_64-linux.onchainBlueprint
+
+  repo-gate:
+    name: Repository Gate
+    runs-on: nixos
+    needs: build-gate
+    steps:
+      - uses: actions/checkout@v4
+      - name: Run CI App
+        run: nix run .#ci
 
   lean:
     name: Lean spec
