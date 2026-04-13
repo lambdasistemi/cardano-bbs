@@ -303,7 +303,7 @@ data NoCtx a
 data Void = Void deriving (Show)
 
 noCtxInterpretIO :: InterpretIO NoCtx
-noCtxInterpretIO = InterpretIO $ \case
+noCtxInterpretIO = InterpretIO $ \case {}
 
 expectRight :: String -> Either String a -> IO a
 expectRight label = \case
