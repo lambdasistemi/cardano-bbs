@@ -51,10 +51,6 @@ jobs:
     runs-on: nixos
     steps:
       - uses: actions/checkout@v4
-      - name: Clean elan cache
-        run: |
-          rm -rf "$HOME/.elan"
-          mkdir -p "$HOME/.elan"
       - name: Build Lean spec
         working-directory: lean
         run: nix --quiet shell nixpkgs#elan -c lake build
