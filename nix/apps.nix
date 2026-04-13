@@ -5,6 +5,6 @@ builtins.mapAttrs
     program = pkgs.lib.getExe check;
   })
   {
-    inherit (checks) offchain onchain ci;
+    inherit (checks) offchain onchain;
     "budget-cases" = checks.budgetCases;
   }

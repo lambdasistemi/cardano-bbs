@@ -27,13 +27,14 @@ The flake now separates development, delivery, and verification:
   - Aiken build, tests, and formatting gate
 - `checks.ci`
   - combined repository gate
-- `apps.offchain`, `apps.onchain`, `apps.ci`, `apps.budget-cases`
+- `apps.offchain`, `apps.onchain`, `apps.budget-cases`
   - runnable entrypoints over the same check/tool definitions
 
 This means CI is no longer “enter a shell and hope”. It has an explicit Nix build surface:
 
-- `nix build .#checks.x86_64-linux.*` warms the runner store with the verification derivations
-- `nix run .#ci` executes the repository gate with stdout visible
+- `nix build .#checks.x86_64-linux.offchain .#checks.x86_64-linux.onchain .#checks.x86_64-linux.onchainBlueprint` warms the runner store with the verification derivations
+- `nix run .#offchain` executes the off-chain gate with stdout visible
+- `nix run .#onchain` executes the on-chain gate with stdout visible
 - `nix run .#budget-cases` runs the budget measurement executable
 
 ## Development

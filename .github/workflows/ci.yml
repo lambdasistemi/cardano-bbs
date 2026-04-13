@@ -21,17 +21,25 @@ jobs:
           nix build --print-build-logs
           .#checks.x86_64-linux.offchain
           .#checks.x86_64-linux.onchain
-          .#checks.x86_64-linux.ci
           .#checks.x86_64-linux.onchainBlueprint
 
-  repo-gate:
-    name: Repository Gate
+  offchain-gate:
+    name: Offchain Gate
     runs-on: nixos
     needs: build-gate
     steps:
       - uses: actions/checkout@v4
-      - name: Run CI App
-        run: nix run .#ci
+      - name: Run Offchain App
+        run: nix run .#offchain
+
+  onchain-gate:
+    name: Onchain Gate
+    runs-on: nixos
+    needs: build-gate
+    steps:
+      - uses: actions/checkout@v4
+      - name: Run Onchain App
+        run: nix run .#onchain
 
   lean:
     name: Lean spec
