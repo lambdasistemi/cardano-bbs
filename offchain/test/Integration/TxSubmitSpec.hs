@@ -103,6 +103,7 @@ import qualified Data.ByteString as BS
 import qualified Data.ByteString.Builder as BB
 import qualified Data.ByteString.Lazy as LBS
 import qualified Data.ByteString.Short as SBS
+import Data.Char (isDigit)
 import Data.List (find)
 import qualified Data.Map.Strict as Map
 import Data.Text (Text)
@@ -117,7 +118,8 @@ spec :: Spec
 spec =
   around withEnv $
     describe "Integration.TxSubmitSpec" $
-      it "submits a BBS validator spend on devnet through cardano-node-clients" $
+      it
+        "submits a BBS validator spend on devnet through cardano-node-clients"
         submitBbsSpend
 
 type Env =
@@ -269,7 +271,7 @@ buildSpend provider pp validator pk credential header attrs disclosed recipient 
     =<< build
       pp
       noCtxInterpretIO
-      (\tx -> fmap (Map.map (either (Left . show) Right)) (evaluateTx provider tx))
+      (fmap (Map.map (either (Left . show) Right)) . evaluateTx provider)
       [paymentUtxo, collateralUtxo, scriptUtxo]
       genesisAddr
       ( spendProgram
@@ -361,7 +363,7 @@ toWord32BE value =
     BB.toLazyByteString $
       BB.word32BE (fromIntegral value)
 
-data Blueprint = Blueprint
+newtype Blueprint = Blueprint
   { validators :: [ValidatorEntry]
   }
 
@@ -410,7 +412,7 @@ decodeHexShort input
 
     hexDigit :: Char -> Maybe Word8
     hexDigit c
-      | c >= '0' && c <= '9' = Just (fromIntegral (fromEnum c - fromEnum '0'))
+      | isDigit c = Just (fromIntegral (fromEnum c - fromEnum '0'))
       | c >= 'a' && c <= 'f' = Just (fromIntegral (fromEnum c - fromEnum 'a' + 10))
       | c >= 'A' && c <= 'F' = Just (fromIntegral (fromEnum c - fromEnum 'A' + 10))
       | otherwise = Nothing
