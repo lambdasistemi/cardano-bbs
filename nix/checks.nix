@@ -24,11 +24,17 @@ let
 
   onchain = pkgs.writeShellApplication {
     name = "onchain-gate";
-    runtimeInputs = pkgs.lib.optionals (aikenPkg != null) [ aikenPkg ];
+    runtimeInputs =
+      [ pkgs.jq ]
+      ++ (pkgs.lib.optionals (aikenPkg != null) [ aikenPkg ]);
     text = ''
-      cd ${repoRoot}/onchain
+      cd ${repoRoot}
+      chmod +x ./scripts/check-budget-matrix.sh
+      cd onchain
       aiken build
-      aiken check
+      cd ${repoRoot}
+      ./scripts/check-budget-matrix.sh
+      cd onchain
       aiken fmt --check
     '';
   };

@@ -22,7 +22,7 @@ test-offchain:
 
 # Run on-chain tests
 test-onchain:
-    cd onchain && aiken check
+    ./scripts/check-budget-matrix.sh
 
 # Format check (CI)
 format-check: format-check-offchain format-check-onchain
