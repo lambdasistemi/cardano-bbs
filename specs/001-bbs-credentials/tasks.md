@@ -164,7 +164,7 @@
 - [ ] T046 [P] Add Haddock documentation to all public modules in offchain/src/
 - [ ] T047 [P] Add Aiken module documentation in onchain/lib/
 - [ ] T048 Run quickstart.md validation — ensure all code snippets work
-- [ ] T049 Create comprehensive budget report: all verification scenarios with ExUnit costs in specs/001-bbs-credentials/budget-report.md
+- [x] T049 Create comprehensive budget report: all verification scenarios with ExUnit costs in specs/001-bbs-credentials/budget-report.md
 - [ ] T050 Security review: verify no secret key material leaks through serialization or proof structures
 
 ---

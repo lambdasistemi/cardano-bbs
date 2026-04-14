@@ -1,0 +1,51 @@
+[
+  {
+    "title": "verify_budget_case_total_1_disclosed_1",
+    "total": 1,
+    "disclosed": 1,
+    "cpu": 2806522370,
+    "mem": 1828884
+  },
+  {
+    "title": "verify_budget_case_total_5_disclosed_1",
+    "total": 5,
+    "disclosed": 1,
+    "cpu": 4255648004,
+    "mem": 3423196
+  },
+  {
+    "title": "verify_budget_case_total_5_disclosed_2",
+    "total": 5,
+    "disclosed": 2,
+    "cpu": 4312524836,
+    "mem": 3615727
+  },
+  {
+    "title": "verify_budget_case_total_10_disclosed_1",
+    "total": 10,
+    "disclosed": 1,
+    "cpu": 6087153959,
+    "mem": 5480751
+  },
+  {
+    "title": "verify_budget_case_total_10_disclosed_2",
+    "total": 10,
+    "disclosed": 2,
+    "cpu": 6148665456,
+    "mem": 5688932
+  },
+  {
+    "title": "verify_budget_case_total_15_disclosed_1",
+    "total": 15,
+    "disclosed": 1,
+    "cpu": 7940992039,
+    "mem": 7610156
+  },
+  {
+    "title": "verify_budget_case_total_15_disclosed_2",
+    "total": 15,
+    "disclosed": 2,
+    "cpu": 8007138201,
+    "mem": 7833987
+  }
+]

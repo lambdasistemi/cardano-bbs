@@ -32,17 +32,33 @@ What does not exist yet:
 
 ## Why This Matters
 
-The off-chain library can already generate valid BBS+ signatures and proofs, serialize them into the Aiken-facing redeemer and datum layout, carry the credential signed header into the on-chain domain calculation, and submit a real validator spend on a local devnet through `cardano-node-clients`. The current on-chain verifier is no longer a structural stub: it recomputes the transcript challenge, checks the core pairing equation, and stays within the 10B CPU transaction ceiling for the measured 1, 5, and 10 attribute cases.
+The off-chain library can already generate valid BBS+ signatures and proofs,
+serialize them into the Aiken-facing redeemer and datum layout, carry the
+credential signed header into the on-chain domain calculation, and submit a
+real validator spend on a local devnet through `cardano-node-clients`. The
+current on-chain verifier is no longer a structural stub: it recomputes the
+transcript challenge, checks the core pairing equation, and stays within the
+10B CPU transaction ceiling for the measured 1, 5, 10, and 15 total-attribute
+cases.
 
 ## Current Budget Signal
 
 Measured verifier costs are now documented in [budget-report.md](/code/cardano-bbs-verify/specs/001-bbs-credentials/budget-report.md).
 
 - 1 attribute: `2.81B` CPU
-- 5 attributes: `4.31B` CPU
-- 10 attributes: `6.26B` CPU
+- 5 attributes, 1 disclosed: `4.26B` CPU
+- 5 attributes, 2 disclosed: `4.31B` CPU
+- 10 attributes, 1 disclosed: `6.09B` CPU
+- 10 attributes, 2 disclosed: `6.15B` CPU
+- 15 attributes, 1 disclosed: `7.94B` CPU
+- 15 attributes, 2 disclosed: `8.01B` CPU
 
-The important result is that the verifier remains under the 10B CPU transaction budget for the currently measured cases. The budget suite still uses `signed_header = ""`, so the next measurement pass should quantify any cost delta for non-empty headers.
+The important result is that the verifier remains under the 10B CPU transaction
+budget for the current matrix, and that matrix is now checked in CI against the
+current Aiken code via
+[check-budget-matrix.sh](/code/cardano-bbs-verify/scripts/check-budget-matrix.sh).
+The budget suite still uses `signed_header = ""`, so the next measurement pass
+should quantify any cost delta for non-empty headers.
 
 ## Next On-Chain Work
 
